@@ -1,16 +1,16 @@
 # Ethical Hacking 2022
 
 ## Lecture plan:
-1. [Legality of Hacking and Responsible Disclosure](1-responsible-disclosure.ipynb)
-2. Binary Reverse Engineering & Exploitation
-3. Deserialization Attacks (Java/JS/Python attacks + SQL/XML/NoSQL/Shell injection refresher)
-4. Fuzzying: Binaries (AFL), Web (APIfuzzer), SQL (SQLmap), make your own fuzzer
-5. Symbolic execution: Angr, build your own engine
-6. Metasploit framework
-7. Forensics & hardware hacking
-8. Bad use of cryptography
-9. Adversarial AI
-10. Identifying & breaking security assumptions
+1. [Legality of Hacking and Responsible Disclosure](1-responsible-disclosure.ipynb) (2/2)
+2. Binary Reverse Engineering & Exploitation (9/2)
+3. Deserialization Attacks (Java/JS/Python attacks + SQL/XML/NoSQL/Shell injection refresher) (16/2)
+4. Fuzzying: Binaries (AFL), Web (APIfuzzer), SQL (SQLmap), make your own fuzzer (23/2)
+5. Symbolic execution: Angr, build your own engine (2/3)
+6. Metasploit framework (9/3)
+7. Forensics & hardware hacking (16/3)
+8. Bad use of cryptography (23/3)
+9. Adversarial AI (30/3)
+10. Identifying & breaking security assumptions (6/3)
 
 ## Project:
 1. Find a project/organization, identify/agree on responsible disclosure policy.
