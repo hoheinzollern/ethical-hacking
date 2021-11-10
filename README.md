@@ -1,7 +1,7 @@
 # Ethical Hacking 2022
 
 ## Lecture plan:
-1. Legality of Hacking and Responsible Disclosure
+1. [Legality of Hacking and Responsible Disclosure](1-responsible-disclosure.ipynb)
 2. Binary Reverse Engineering & Exploitation
 3. Deserialization Attacks (Java/JS/Python attacks + SQL/XML/NoSQL/Shell injection refresher)
 4. Fuzzying: Binaries (AFL), Web (APIfuzzer), SQL (SQLmap), make your own fuzzer
