@@ -14,6 +14,7 @@ https://github.com/fuzzstati0n/fuzzgoat
 ## Tools and fuzers
 AFL (mutation, coverage-guided): 
 https://github.com/google/AFL
+
 AFL++ (more advanced than above, a fork):
 https://aflplus.plus/
 
