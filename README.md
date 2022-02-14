@@ -3,7 +3,7 @@
 ## Lecture plan:
 1. [Legality of Hacking and Responsible Disclosure](1-responsible-disclosure.ipynb) (2/2)
 2. [Binary Reverse Engineering](2-reverse-engineering.ipynb) (9/2)
-3. Deserialization Attacks (Java/JS/Python attacks + SQL/XML/NoSQL/Shell injection refresher) (16/2)
+3. [Deserialization Attacks (Java/JS/Python attacks + SQL/XML/NoSQL/Shell injection refresher)](3-deserialization-attacks.ipynb) (16/2)
 4. Fuzzying: Binaries (AFL), Web (APIfuzzer), SQL (SQLmap), make your own fuzzer (23/2)
 5. Symbolic execution: Angr, build your own engine (2/3)
 6. Hardware hacking (9/3)
