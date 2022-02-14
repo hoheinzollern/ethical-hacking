@@ -1,5 +1,7 @@
 # Ethical Hacking 2022
 
+Come hack, and ask quesitons: https://discord.gg/RQTKCrfW
+
 ## Lecture plan:
 1. [Legality of Hacking and Responsible Disclosure](1-responsible-disclosure.ipynb) (2/2)
 2. [Binary Reverse Engineering](2-reverse-engineering.ipynb) (9/2)
