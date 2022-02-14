@@ -3,6 +3,9 @@
 The original fuzzing paper:
 https://dl.acm.org/doi/pdf/10.1145/96267.96279?casa_token=tUXBtAPtCpkAAAAA:W18Uyp56_buvcFYekiqr9qxTB7xDSBrBpP_nhXdBiUm9wgPZQdvC9adr050CwZNS_OviMGxGtfSZcjY
 
+Fuzzing Survey:
+https://arxiv.org/pdf/1812.00140.pdf
+
 ## Practical
 A series on the practical techniques to writing a fuzzer in C++: 
 https://h0mbre.github.io/Fuzzing-Like-A-Caveman/
