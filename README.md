@@ -12,7 +12,7 @@ Come hack, and ask quesitons: https://discord.gg/RQTKCrfW
 7. Forensics & antiforensics (16/3)
 8. Bad use of cryptography (23/3)
 9. Adversarial AI (30/3)
-10. Identifying & breaking security assumptions (6/3)
+10. Identifying & breaking security assumptions (6/4)
 
 ## Project:
 1. Find a project/organization, identify/agree on responsible disclosure policy.
