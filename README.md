@@ -8,11 +8,12 @@ Come hack, and ask quesitons: https://discord.gg/RQTKCrfW
 3. [Deserialization Attacks (Java/JS/Python attacks + SQL/XML/NoSQL/Shell injection refresher)](3-deserialization-attacks.ipynb) (16/2)
 4. [Fuzzying: Binaries (AFL), Web (APIfuzzer), SQL (SQLmap), make your own fuzzer](4-fuzzying.ipynb) (23/2)
 5. [Symbolic execution: Angr, build your own engine](5-symbolic-execution.ipynb) (2/3)
-6. Hardware hacking (9/3)
+6. Lecture cancelled (9/3)
 7. Forensics & antiforensics (16/3)
 8. Bad use of cryptography (23/3)
 9. Adversarial AI (30/3)
 10. Identifying & breaking security assumptions (6/4)
+11. Hardware hacking (20/4)
 
 ## Project:
 1. Find a project/organization, identify/agree on responsible disclosure policy.
