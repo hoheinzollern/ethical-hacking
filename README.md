@@ -9,11 +9,10 @@ Come hack, and ask quesitons: https://discord.gg/RQTKCrfW
 4. [Fuzzying: Binaries (AFL), Web (APIfuzzer), SQL (SQLmap), make your own fuzzer](4-fuzzying.ipynb) (23/2)
 5. [Symbolic execution: Angr, build your own engine](5-symbolic-execution.ipynb) (2/3)
 6. Lecture cancelled (9/3)
-7. [Forensics & antiforensics](cf.pdf) (16/3)
-8. Bad use of cryptography (23/3)
-9. Adversarial AI (30/3)
-10. Identifying & breaking security assumptions (6/4)
-11. Hardware hacking (20/4)
+7. [Forensics & antiforensics](7-computer-forensics.pdf) (16/3)
+8. [Bad use of cryptography](8-bad-crypto.pptx) (23/3)
+9. [Adversarial AI](9-adversarial-ai.ipynb) (30/3)
+10. [HW hacking / Identifying & breaking security assumptions](10-hw-hacking-and-birdeye.ipynb) (6/4)
 
 ## Project:
 1. Find a project/organization, identify/agree on responsible disclosure policy.
