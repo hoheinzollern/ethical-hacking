@@ -1,0 +1,15 @@
+mini #1:
+
+mov rax, rdi
+mov ebx, DWORD PTR[r8]
+mov DWORD PTR[r9], esi
+
+mini #2:
+
+add rax, rdi
+add rax, rsi
+mov bx, WORD PTR[r8]
+imul rbx, rdx
+sub rax, rbx
+mov QWORD PTR[r9], rax
+
