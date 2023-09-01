@@ -18,3 +18,7 @@
 2. Preliminary exploration: HW/SW architecture, security model and assumptions.
 3. Choose a technique from class and hack away :)
 4. Follow through with responsible disclosure.
+
+## TODO: 
+1. consider incident/response
+2. invite cave to give a talk for HW hacking
