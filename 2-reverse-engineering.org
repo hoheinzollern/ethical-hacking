@@ -1,0 +1,122 @@
+#+title: Reverse engineering
+#+author: Alessandro Bruni
+
+* Resources
+
+
+- [[https://www.shogunlab.com/blog/2019/04/12/here-be-dragons-ghidra-0.html][Ghidra tutorial pt0]]
+- [[https://www.shogunlab.com/blog/2019/12/22/here-be-dragons-ghidra-1.html][Ghidra tutorial pt1]]
+- [[https://nostarch.com/GhidraBook][The Ghidra Book]]
+- [[http://www.jegerlehner.ch/intel/IntelCodeTable.pdf][Intel code table]]
+- [[https://gcc.rce.so/][OMU training - GCC 2022]]
+- [[https://crackmes.one/][crackmes.one]]
+- [[https://godbolt.org/][Compiler explorer]]
+- [[https://rizin.re/][Rizin]]/[[https://cutter.re/][cutter]]
+- [[https://hugsy.github.io/gef/][GDB GEF extensions]]
+
+* Basics
+
+
+** Scenarios for RE
+
+
+- analysing compiled code (e.g. protocols)
+- finding vulnerabilities
+- exploiting vulnerabilities
+- malware analysis
+- forensics
+
+** Reverse engineering mindset
+
+
+- software is HUGE, it's easy to get lost
+- RE is about finding the right place -- not about understanding
+  everything
+
+** Today we cover
+
+
+- searching for strings
+- finding entrypoints
+- understanding disassembly
+- debugging code
+
+* What is Reverse Engineering?
+#+caption: image-2.png
+[[file:2-reverse-engineering_files/image-2.png]]-----------
+
+#+caption: image.png
+[[file:2-reverse-engineering_files/image.png]]
+
+#+caption: image.png
+[[file:2-reverse-engineering_files/image.png]]
+
+#+caption: image.png
+[[file:2-reverse-engineering_files/image.png]]
+
+#+caption: Screenshot%20from%202022-02-09%2006-19-45.png
+[[file:2-reverse-engineering_files/Screenshot%20from%202022-02-09%2006-19-45.png]]
+
+#+caption: image-2.png
+[[file:2-reverse-engineering_files/image-2.png]]
+
+* CPU (x86)
+
+
+#+caption: image.png
+[[file:2-reverse-engineering_files/image.png]]
+
+- fetch-decode-execute cycle
+- [[http://www.jegerlehner.ch/intel/IntelCodeTable.pdf][instruction set
+  cheatsheet]]
+
+** Function frame
+
+
+#+caption: image.png
+[[file:2-reverse-engineering_files/image.png]]
+
+** Calling conventions, stack vs registers
+
+
+** Assignments, arithmetics, conditionals, loops etc.
+
+
+* ASLR and the Global Offset Table (GOT) and Procedure Linkage Table (PLT)
+
+
+- https://ctf101.org/binary-exploitation/what-is-the-got/
+
+* RISC (e.g. ARM)
+
+
+#+caption: image.png
+[[file:2-reverse-engineering_files/image.png]]
+
+* Stack-based VMs
+
+
+- e.g. JVM/Java, Python etc.
+- bytecode maps more directly to source language
+- easier decompilation: [[https://ghidra-sre.org/][Ghidra]],
+  [[http://www.brouhaha.com/~eric/software/mocha/][Mocha]]
+
+* Register-based VMs
+
+
+- e.g. .NET/CLR, Dalvik/Java etc.
+- infinite number of registers available, unlike real CPUs
+- also easy to decompile:
+  [[https://www.jetbrains.com/decompiler/][dotPeek]],
+  [[https://www.pnfsoftware.com/][JEB]]
+
+* Exercise session:
+
+
+- [[https://github.com/radareorg/radare2-book/raw/master/src/crackmes/ioli/IOLI-crackme.tar.gz][IOLI
+  crackmes]]
+- HackTheBox
+  [[https://app.hackthebox.com/tracks/Intro-to-Reversing][Reversing
+  track]] and
+  [[https://app.hackthebox.com/tracks/Intro-to-Binary-Exploitation][Exploitation
+  track]]

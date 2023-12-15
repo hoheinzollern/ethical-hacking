@@ -1,0 +1,70 @@
+* Adversarial AI
+:PROPERTIES:
+:CUSTOM_ID: adversarial-ai
+:END:
+** #NotHotDog
+:PROPERTIES:
+:CUSTOM_ID: nothotdog
+:END:
+- https://blog.paperspace.com/ml_behind_nothotdog_app/
+- https://www.digitaltribune.com/not-hotdog/
+- https://twitter.com/hashtag/NotHotdog
+
+#+caption: nothotdog
+[[file:img/nothotdog.jpg]]
+
+** Slides
+:PROPERTIES:
+:CUSTOM_ID: slides
+:END:
+- [[file:talks/bsi-auditable-ai.pdf][BSI talk]]
+- [[file:talks/stanford-adversarial-samples.pdf][Stanford talk]]
+
+** Literature
+:PROPERTIES:
+:CUSTOM_ID: literature
+:END:
+*** Blog posts:
+:PROPERTIES:
+:CUSTOM_ID: blog-posts
+:END:
+- Fast gradient sign method: https://jaketae.github.io/study/fgsm/
+- Towards a general theory of "adversarial examples," the bizarre,
+  hallucinatory motes in machine learning's all-seeing eye
+  https://boingboing.net/2019/03/08/hot-dog-or-not.html
+- Adversarial attacks: How to trick computer vision
+  https://hackernoon.com/adversarial-attacks-how-to-trick-computer-vision-7484c4e85dc0
+  ### Scientific articles:
+- Explaining and harnessing adversarial examples
+  https://arxiv.org/pdf/1412.6572.pdf
+- Intriguing properties of neural networks
+  https://arxiv.org/pdf/1312.6199.pdf
+
+** Generating adversarial examples
+:PROPERTIES:
+:CUSTOM_ID: generating-adversarial-examples
+:END:
+- Use cleverhans: https://github.com/cleverhans-lab/cleverhans
+
+*** Target nets:
+:PROPERTIES:
+:CUSTOM_ID: target-nets
+:END:
+- Cubs: https://github.com/nicolalandro/ntsnet-cub200
+- Shoes: https://github.com/rfox12-edu/image_classifier_pytorch_shoes
+- Flowers: https://github.com/jclh/image-classifier-PyTorch
+
+** GANs resources
+:PROPERTIES:
+:CUSTOM_ID: gans-resources
+:END:
+https://machinelearningmastery.com/resources-for-getting-started-with-generative-adversarial-networks/
+
+* More interesting links
+:PROPERTIES:
+:CUSTOM_ID: more-interesting-links
+:END:
+- https://analyticsindiamag.com/an-idiots-guide-to-adversarial-attacks-in-machine-learning/
+- https://www.belfercenter.org/publication/AttackingAI
+- https://openai.com/blog/adversarial-example-research/
+- https://machinelearningmastery.com/data-leakage-machine-learning/

@@ -1,0 +1,1782 @@
+* Symbolic execution
+:PROPERTIES:
+:CUSTOM_ID: symbolic-execution
+:END:
+*** Alessandro Bruni
+:PROPERTIES:
+:CUSTOM_ID: alessandro-bruni
+:END:
+*** Ethical Hacking, Mar 8 2023
+:PROPERTIES:
+:CUSTOM_ID: ethical-hacking-mar-8-2023
+:END:
+Today we look at another way for automating exploitation: is symbolic
+execution
+
+*** Reading material:
+:PROPERTIES:
+:CUSTOM_ID: reading-material
+:END:
+- [[https://valgrind.org/docs/manual/index.html][Valgrind
+  documentation]]
+- [[https://angr.io/][Angr.io documentation]]
+
+* Uniform program representation
+:PROPERTIES:
+:CUSTOM_ID: uniform-program-representation
+:END:
+* Problem
+:PROPERTIES:
+:CUSTOM_ID: problem
+:END:
+- we have programs in many different formats
+- often in offensive security no access to sources
+- if we want to analyze code we need an uniform way to represent it, so
+  to reuse the analysis on different platform
+
+* Example
+:PROPERTIES:
+:CUSTOM_ID: example
+:END:
+#+begin_src C
+int main(int argc, char**argv) {
+    if (argc > 1 && strcmp(argv[1], "Th3s3cr37") == 0) {
+        printf("You got me\n");
+    } else {
+        printf("No way!\n");
+    }
+}
+#+end_src
+
+* x86
+:PROPERTIES:
+:CUSTOM_ID: x86
+:END:
+#+begin_example
+main:
+.LFB0:
+    .cfi_startproc
+    pushq   %rbp
+    .cfi_def_cfa_offset 16
+    .cfi_offset 6, -16
+    movq    %rsp, %rbp
+    .cfi_def_cfa_register 6
+    subq    $16, %rsp
+    movl    %edi, -4(%rbp)
+    movq    %rsi, -16(%rbp)
+    cmpl    $1, -4(%rbp)
+    jle .L2
+    movq    -16(%rbp), %rax
+    addq    $8, %rax
+    movq    (%rax), %rax
+    movl    $.LC0, %esi
+    movq    %rax, %rdi
+    call    strcmp
+    testl   %eax, %eax
+    jne .L2
+    movl    $.LC1, %edi
+    call    puts
+    jmp .L3
+.L2:
+    movl    $.LC2, %edi
+    call    puts
+.L3:
+    movl    $0, %eax
+    leave
+    .cfi_def_cfa 7, 8
+    ret
+    .cfi_endproc
+#+end_example
+
+* ARM
+:PROPERTIES:
+:CUSTOM_ID: arm
+:END:
+#+begin_example
+main:
+    push    {fp, lr}
+    add fp, sp, #4
+    sub sp, sp, #8
+    str r0, [fp, #-8]
+    str r1, [fp, #-12]
+    ldr r3, [fp, #-8]
+    cmp r3, #1
+    ble .L2
+    ldr r3, [fp, #-12]
+    add r3, r3, #4
+    ldr r3, [r3]
+    ldr r1, .L5
+    mov r0, r3
+    bl  strcmp
+    mov r3, r0
+    cmp r3, #0
+    bne .L2
+    ldr r0, .L5+4
+    bl  puts
+    b   .L3
+.L2:
+    ldr r0, .L5+8
+    bl  puts
+.L3:
+    mov r3, #0
+    mov r0, r3
+    sub sp, fp, #4
+    @ sp needed
+    pop {fp, lr}
+    bx  lr
+#+end_example
+
+* Instrumentation
+:PROPERTIES:
+:CUSTOM_ID: instrumentation
+:END:
+* Idea
+:PROPERTIES:
+:CUSTOM_ID: idea
+:END:
+- all machines (CPUs or VMs) operate in a very similar way
+- they all have:
+  - /registers/ (just one accumulator for stack machines like JVM/.NET
+    CLR, a fixed number like in x86/ARM, an infinite number like in
+    DEX/Android and LLVM-IR)
+  - a /stack/
+  - a /heap/
+- they all do:
+  - /load/store/ operations between registers and RAM (x86 does this
+    implicitly)
+  - /math/ operations (e.g. addition, subtraction, logical and/or/xor)
+  - /control/ operations (branching, function call/return) ## Let's
+    generalize!
+
+*** Enter Valgrind/VEX
+:PROPERTIES:
+:CUSTOM_ID: enter-valgrindvex
+:END:
+#+caption: image.png
+[[file:6-symbolic-execution_files/image.png]]
+
+* VEX
+:PROPERTIES:
+:CUSTOM_ID: vex
+:END:
+- there are many intermediate representations that try to generalize CPU
+  codes, tailored at different use cases
+  (e.g. [[https://llvm.org/docs/LangRef.html][LLVM]], radare's
+  [[https://radare.gitbooks.io/radare2book/content/disassembling/esil.html][ESIL]],
+  [[https://github.com/BinaryAnalysisPlatform/bap][BAP's IR]],
+  [[https://docs.angr.io/advanced-topics/ir][VEX]])
+- VEX is tailored towards accurate execution and instrumentation of code
+
+*** Example
+:PROPERTIES:
+:CUSTOM_ID: example-1
+:END:
+The following ARM instruction:
+
+#+begin_example
+subs R2, R2, #8
+#+end_example
+
+Becomes this VEX IR:
+
+#+begin_example
+t0 = GET:I32(16)
+t1 = 0x8:I32
+t3 = Sub32(t0,t1)
+PUT(16) = t3
+PUT(68) = 0x59FC8:I32
+#+end_example
+
+* Let's play with VEX
+:PROPERTIES:
+:CUSTOM_ID: lets-play-with-vex
+:END:
+#+begin_src python
+import angr, claripy
+project = angr.Project("examples/ex01")
+#+end_src
+
+#+begin_src python
+irsb = project.factory.block(0x0000000000401136).vex
+irsb.pp()
+#+end_src
+
+#+begin_example
+IRSB {
+   t0:Ity_I64 t1:Ity_I64 t2:Ity_I64 t3:Ity_I64 t4:Ity_I64 t5:Ity_I64 t6:Ity_I64 t7:Ity_I32 t8:Ity_I32 t9:Ity_I32 t10:Ity_I64 t11:Ity_I64 t12:Ity_I64 t13:Ity_I64 t14:Ity_I64 t15:Ity_I64 t16:Ity_I32 t17:Ity_I64 t18:Ity_I64 t19:Ity_I64 t20:Ity_I64 t21:Ity_I64 t22:Ity_I64 t23:Ity_I64 t24:Ity_I64 t25:Ity_I1 t26:Ity_I64 t27:Ity_I64 t28:Ity_I64 t29:Ity_I64 t30:Ity_I64 t31:Ity_I64 t32:Ity_I32 t33:Ity_I64 t34:Ity_I64 t35:Ity_I1 t36:Ity_I32 t37:Ity_I32 t38:Ity_I1
+
+   00 | ------ IMark(0x401136, 1, 0) ------
+   01 | t0 = GET:I64(rbp)
+   02 | t12 = GET:I64(rsp)
+   03 | t11 = Sub64(t12,0x0000000000000008)
+   04 | PUT(rsp) = t11
+   05 | STle(t11) = t0
+   06 | ------ IMark(0x401137, 3, 0) ------
+   07 | PUT(rbp) = t11
+   08 | ------ IMark(0x40113a, 4, 0) ------
+   09 | t2 = Sub64(t11,0x0000000000000010)
+   10 | PUT(rsp) = t2
+   11 | PUT(rip) = 0x000000000040113e
+   12 | ------ IMark(0x40113e, 3, 0) ------
+   13 | t14 = Add64(t11,0xfffffffffffffffc)
+   14 | t17 = GET:I64(rdi)
+   15 | t32 = 64to32(t17)
+   16 | t16 = t32
+   17 | STle(t14) = t16
+   18 | PUT(rip) = 0x0000000000401141
+   19 | ------ IMark(0x401141, 4, 0) ------
+   20 | t18 = Add64(t11,0xfffffffffffffff0)
+   21 | t20 = GET:I64(rsi)
+   22 | STle(t18) = t20
+   23 | PUT(rip) = 0x0000000000401145
+   24 | ------ IMark(0x401145, 4, 0) ------
+   25 | t21 = Add64(t11,0xfffffffffffffffc)
+   26 | t9 = LDle:I32(t21)
+   27 | PUT(cc_op) = 0x0000000000000007
+   28 | t33 = 32Uto64(t9)
+   29 | t23 = t33
+   30 | PUT(cc_dep1) = t23
+   31 | PUT(cc_dep2) = 0x0000000000000001
+   32 | PUT(rip) = 0x0000000000401149
+   33 | ------ IMark(0x401149, 2, 0) ------
+   34 | t36 = 64to32(0x0000000000000001)
+   35 | t37 = 64to32(t23)
+   36 | t35 = CmpLE32S(t37,t36)
+   37 | t34 = 1Uto64(t35)
+   38 | t30 = t34
+   39 | t38 = 64to1(t30)
+   40 | t25 = t38
+   41 | if (t25) { PUT(rip) = 0x401173; Ijk_Boring }
+   NEXT: PUT(rip) = 0x000000000040114b; Ijk_Boring
+}
+#+end_example
+
+* Analyses
+:PROPERTIES:
+:CUSTOM_ID: analyses
+:END:
+Once we have a way to represent arbitrary binary files we can: - run
+static analysis - instrument the code - fuzz the binary - run dynamic
+analysis
+
+* Static analysis
+:PROPERTIES:
+:CUSTOM_ID: static-analysis
+:END:
+Most useful at compile time, but can be run also on binaries. The basic
+idea: describe mathematically a piece of code and learn interesting
+properties instead of running it.
+
+If interested for an introduction, check this book:
+[[https://www.springer.com/gp/book/9783030051556][[[file:6-symbolic-execution_files/image.png]]]]
+
+* Example: null-pointer analysis
+:PROPERTIES:
+:CUSTOM_ID: example-null-pointer-analysis
+:END:
+#+begin_src C
+#include <stdio.h>
+
+void main(void) {
+    char *s = NULL;
+    *s = 'x';
+}
+#+end_src
+
+what happens if we run this?
+
+* Bad news!
+:PROPERTIES:
+:CUSTOM_ID: bad-news
+:END:
+** Rice's theorem:
+:PROPERTIES:
+:CUSTOM_ID: rices-theorem
+:END:
+All non-trivial, semantic properties of programs are undecidable
+
+* Good news!
+:PROPERTIES:
+:CUSTOM_ID: good-news
+:END:
+** Bruni's postulates:
+:PROPERTIES:
+:CUSTOM_ID: brunis-postulates
+:END:
+- We have jobs for the foreseable future :)
+- And we have tools that can help us
+
+* Dynamic analyses
+:PROPERTIES:
+:CUSTOM_ID: dynamic-analyses
+:END:
+If we cannot decide things statically, then we can: - instrument and run
+the code - fuzz the binary - run symbolic execution
+
+* Binary instrumentation
+:PROPERTIES:
+:CUSTOM_ID: binary-instrumentation
+:END:
+- take the IR of a program and change it as to reveal software flaws
+- e.g. add memory bounds checking to every memory access, to find
+  potential buffer overflows
+- look at https://www.valgrind.org/info/tools.html for different
+  analyses
+
+** Limitation
+:PROPERTIES:
+:CUSTOM_ID: limitation
+:END:
+- triggering flaws requires that we execute all code paths
+- one can use unit tests or..
+
+* Fuzzying
+:PROPERTIES:
+:CUSTOM_ID: fuzzying
+:END:
+[[https://lcamtuf.coredump.cx/afl/][[[file:6-symbolic-execution_files/image.png]]]]
+
+- American Fuzzy Lop is a /coverage based fuzzer/: it runs the program
+  with different inputs to find failure states
+- Basic: random fuzzying
+- More advanced: guided fuzzying with /input grammars/, /genetic input
+  generation/ to improve coverage and accelerate search
+- Ultimately, the approach is limited: it relies on randomization to
+  find new path, so certain "rare" paths are hard to find
+
+** Example
+:PROPERTIES:
+:CUSTOM_ID: example-2
+:END:
+#+begin_src C
+int main(void) {
+    char buf[32];
+    char *data = read_string();
+    unsigned int magic = read_number();
+
+    if (magic == 0x31337987) {
+        memcpy(buf, data, 100); // buffer overflow
+    }
+}
+#+end_src
+
+* Symbolic execution
+:PROPERTIES:
+:CUSTOM_ID: symbolic-execution-1
+:END:
+Idea: augment code coverage by building a set of constraints on the
+input that allow to choose a specific path
+
+** Example
+:PROPERTIES:
+:CUSTOM_ID: example-3
+:END:
+#+begin_src C
+int main(void) {
+    char buf[32];
+    char *data = read_string();
+    unsigned int magic = read_number();
+
+    if (magic == 0x31337987) {
+        memcpy(buf, data, 100); // buffer overflow
+    }
+}
+#+end_src
+
+- To reach the buffer overflow, we add the constraint that
+  =magic == 0x31337987=
+
+- We can treat every decision point as a branch on a tree, and try to
+  explore all possible branches.
+
+* [[https://en.wikipedia.org/wiki/Satisfiability_modulo_theories][SMT solvers]]
+:PROPERTIES:
+:CUSTOM_ID: smt-solvers
+:END:
+- SMT stands for Satisfiability Modulo Theory
+- essentially solving the SAT problem (known NP-complete but efficient
+  solutions are available) where each atom relies on a theory
+- SAT:
+  e.g. \((a \vee b \vee c) \wedge (\lnot a \vee b) \wedge (\lnot b)\)
+- theories: empty theory, linear arithmetic, nonlinear arithmetic,
+  bitvectors, arrays, datatypes, quantifiers, strings (from Z3)
+
+#+begin_src python
+from z3 import *
+x = Real('x'); y = Real('y')
+s = Solver()
+s.add(x < 10)
+s.add(y > x)
+print(s.check())
+s.model()
+#+end_src
+
+#+begin_example
+sat
+#+end_example
+
+[y = 1, x = 0]
+
+* Symbolic execution (cont.)
+:PROPERTIES:
+:CUSTOM_ID: symbolic-execution-cont.
+:END:
+- once we have a tool to express path constraints (SMT) we can implement
+  any search procedure for the branch tree: DFS, BFS, etc
+
+* Simple Symbolic Execution (from [[https://gist.github.com/hoheinzollern/409f9aae52b96b770ad8959f8e4c496b][GIST]])
+:PROPERTIES:
+:CUSTOM_ID: simple-symbolic-execution-from-gist
+:END:
+- dynamic languages support easy instrumentation
+- proxy objects: they simulate the interface of "real" objects but add
+  new functionality
+
+#+begin_src python
+def find_path(path, f, *args, **kwargs):
+    log = []
+    def unwrap(other):
+        try:
+            return other.v
+        except:
+            return other
+    class Sym:
+        def __init__(self, v):
+            self.v = v
+            
+        def __repr__(self):
+            return self.v.__repr__()
+
+        # Arithmetic operators
+        def __add__(self, other):
+            return Sym(self.v.__add__(unwrap(other)))
+
+        def __sub__(self, other):
+            return Sym(self.v.__sub__(unwrap(other)))
+
+        def __mul__(self, other):
+            return Sym(self.v.__mul__(unwrap(other)))
+
+        def __div__(self, other):
+            return Sym(self.v.__div__(unwrap(other)))
+
+        def __neg__(self):
+            return Sym(self.v.__neg__())
+    
+        # Comparison operators
+        def __eq__(self, other):
+            return Sym(self.v.__eq__(unwrap(other)))
+
+        def __ne__(self, other):
+            return Sym(self.v.__ne__(unwrap(other)))
+
+        def __le__(self, other):
+            return Sym(self.v.__le__(unwrap(other)))
+        
+        def __ge__(self, other):
+            return Sym(self.v.__ge__(unwrap(other)))
+
+        def __lt__(self, other):
+            return Sym(self.v.__lt__(unwrap(other)))
+
+        def __gt__(self, other):
+            return Sym(self.v.__gt__(unwrap(other)))
+
+        # Boolean operators
+        def __and__(self, other):
+            return Sym(And(self.v, unwrap(other)))
+
+        def __or__(self, other):
+            return Sym(Or(self.v, unwrap(other)))
+
+        def __not__(self):
+            return Sym(Not(self.v))
+
+        # This is the crucial bit: when we evaluate a boolean
+        # expression, we check what branch we need to take (true or
+        # false), and add a constraint to the solver accordingly
+        def __bool__(self):
+            if path.pop():
+                log.append(self.v)
+                return True
+            else:
+                log.append(Not(self.v))
+                return False
+
+    f(*map(Sym,args), **kwargs)
+    print(log)
+    s = Solver()
+    map(lambda x: s.add(x), log)
+    res = s.check()
+    print(res)
+    if res:
+        print(s.model())
+    else:
+        print('unsat')
+
+def f(x, y):
+    x = x + y*2
+    print(x)
+    if x == 5:
+        z = 0
+    else:
+        z = 1
+
+find_path([True], f, Real('x'), Real('y'))
+#+end_src
+
+#+begin_example
+x + y*2
+[x + y*2 == 5]
+sat
+[]
+#+end_example
+
+* Concolic execution in Angr
+:PROPERTIES:
+:CUSTOM_ID: concolic-execution-in-angr
+:END:
+- [[https://docs.angr.io/][angr.io]] is a framework for running analyses
+  that puts together all the concepts above, and more
+- /concolic execution/: mixes symbolic constraints and concrete inputs
+  to improve coverage
+- you can implement your own search procedure
+
+** Example:
+:PROPERTIES:
+:CUSTOM_ID: example-4
+:END:
+#+begin_src C
+int main(void) {
+    char buf[32];
+    char *data = read_string();
+    unsigned int magic = read_number();
+
+    if (magic == 0x31337987) {  // difficult check for fuzzing
+        memcpy(buf, data, 100); // buffer overflow
+    }
+
+    if (magic < 100 && magic % 15 == 2 && magic % 11 == 6) {
+        // Only solution is 17; safe
+        memcpy(buf, data, magic);
+    }
+    
+    // Symbolic execution will suffer from path explosion
+    int count = 0;
+    for (int i = 0; i < 100; i++) {
+        if (data[i] == 'Z') {
+            count++;
+        }
+    }
+
+    if (count >= 8 && count <= 16) {
+        memcpy(buf, data, count*20); // buffer overflow
+    }
+}
+#+end_src
+
+#+begin_src python
+argv = claripy.BVS('argv', 10*0x8)
+state = project.factory.entry_state(args = ['ex01', argv])
+simgr = project.factory.simgr(state)
+simgr.explore(find = lambda s: b'You got me' in s.posix.dumps(1))
+print(simgr.found[0].solver.eval(argv, cast_to = bytes))
+#+end_src
+
+#+begin_example
+---------------------------------------------------------------------------
+
+NameError                                 Traceback (most recent call last)
+
+Cell In[4], line 1
+----> 1 argv = claripy.BVS('argv', 10*0x8)
+      2 state = project.factory.entry_state(args = ['ex01', argv])
+      3 simgr = project.factory.simgr(state)
+
+
+NameError: name 'claripy' is not defined
+#+end_example
+
+#+begin_src python
+project = angr.Project("examples/ex02")
+state = project.factory.entry_state()
+simgr = project.factory.simgr(state)
+simgr.explore(find = 0x00401245)#lambda s: b'You got it' in s.posix.dumps(1))
+simgr.found[0].posix.dumps(0)
+#+end_src
+
+#+begin_example
+WARNING  | 2023-03-29 19:00:27,322 | angr.storage.memory_mixins.default_filler_mixin | Filling register r10 with 8 unconstrained bytes referenced from 0x4013ae (__afl_setup_first+0x25 in ex02 (0x4013ae))
+WARNING  | 2023-03-29 19:00:27,323 | angr.storage.memory_mixins.default_filler_mixin | Filling register r11 with 8 unconstrained bytes referenced from 0x4013b3 (__afl_setup_first+0x2a in ex02 (0x4013b3))
+WARNING  | 2023-03-29 19:00:27,324 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm0lq with 8 unconstrained bytes referenced from 0x4013b8 (__afl_setup_first+0x2f in ex02 (0x4013b8))
+WARNING  | 2023-03-29 19:00:27,325 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm1lq with 8 unconstrained bytes referenced from 0x4013be (__afl_setup_first+0x35 in ex02 (0x4013be))
+WARNING  | 2023-03-29 19:00:27,326 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm2lq with 8 unconstrained bytes referenced from 0x4013c4 (__afl_setup_first+0x3b in ex02 (0x4013c4))
+WARNING  | 2023-03-29 19:00:27,327 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm3lq with 8 unconstrained bytes referenced from 0x4013cd (__afl_setup_first+0x44 in ex02 (0x4013cd))
+WARNING  | 2023-03-29 19:00:27,328 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm4lq with 8 unconstrained bytes referenced from 0x4013d6 (__afl_setup_first+0x4d in ex02 (0x4013d6))
+WARNING  | 2023-03-29 19:00:27,329 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm5lq with 8 unconstrained bytes referenced from 0x4013df (__afl_setup_first+0x56 in ex02 (0x4013df))
+WARNING  | 2023-03-29 19:00:27,330 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm6lq with 8 unconstrained bytes referenced from 0x4013e8 (__afl_setup_first+0x5f in ex02 (0x4013e8))
+WARNING  | 2023-03-29 19:00:27,331 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm7lq with 8 unconstrained bytes referenced from 0x4013f1 (__afl_setup_first+0x68 in ex02 (0x4013f1))
+WARNING  | 2023-03-29 19:00:27,332 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm8lq with 8 unconstrained bytes referenced from 0x4013fa (__afl_setup_first+0x71 in ex02 (0x4013fa))
+WARNING  | 2023-03-29 19:00:27,333 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm9lq with 8 unconstrained bytes referenced from 0x401404 (__afl_setup_first+0x7b in ex02 (0x401404))
+WARNING  | 2023-03-29 19:00:27,334 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm10lq with 8 unconstrained bytes referenced from 0x40140e (__afl_setup_first+0x85 in ex02 (0x40140e))
+WARNING  | 2023-03-29 19:00:27,335 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm11lq with 8 unconstrained bytes referenced from 0x401418 (__afl_setup_first+0x8f in ex02 (0x401418))
+WARNING  | 2023-03-29 19:00:27,336 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm12lq with 8 unconstrained bytes referenced from 0x401422 (__afl_setup_first+0x99 in ex02 (0x401422))
+WARNING  | 2023-03-29 19:00:27,336 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm13lq with 8 unconstrained bytes referenced from 0x40142c (__afl_setup_first+0xa3 in ex02 (0x40142c))
+WARNING  | 2023-03-29 19:00:27,337 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm14lq with 8 unconstrained bytes referenced from 0x401436 (__afl_setup_first+0xad in ex02 (0x401436))
+WARNING  | 2023-03-29 19:00:27,339 | angr.storage.memory_mixins.default_filler_mixin | Filling register xmm15lq with 8 unconstrained bytes referenced from 0x401440 (__afl_setup_first+0xb7 in ex02 (0x401440))
+
+
+
+
+
+b'Gimme your secrets: Z3s3cr37\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+#+end_example
+
+#+begin_src python
+cfg = project.analyses.CFGEmulated(keep_state=True)
+print(cfg.edges)
+#+end_src
+
+#+begin_example
+WARNING  | 2023-03-08 11:35:44,814 | angr.analyses.cfg.cfg_base | "auto_load_libs" is enabled. With libraries loaded in project, CFG will cover libraries, which may take significantly more time than expected. You may reload the binary with "auto_load_libs" disabled, or specify "regions" to limit the scope of CFG recovery.
+WARNING  | 2023-03-08 11:35:57,147 | angr.state_plugins.callstack | Returning to an unexpected address 0x910670
+WARNING  | 2023-03-08 11:35:57,287 | angr.state_plugins.callstack | Returning to an unexpected address 0xca
+WARNING  | 2023-03-08 11:35:57,295 | angr.state_plugins.callstack | Returning to an unexpected address 0xca
+WARNING  | 2023-03-08 11:35:57,517 | angr.state_plugins.callstack | Returning to an unexpected address 0x910000
+WARNING  | 2023-03-08 11:35:58,123 | angr.state_plugins.callstack | Returning to an unexpected address 0x910000
+ERROR    | 2023-03-08 11:36:07,465 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:07,467 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:07,491 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:07,494 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:07,507 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:07,508 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,623 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,624 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,636 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,638 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,652 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,654 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,661 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,662 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,680 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,681 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,691 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,694 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,702 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,704 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,715 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,716 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,727 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,729 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,807 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,808 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,822 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,824 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,840 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,842 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,850 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,852 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,865 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,866 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:16,872 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:16,874 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:18,793 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:18,794 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:18,850 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:18,852 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Unop Iop_GetMSBs8x16.
+WARNING  | 2023-03-08 11:36:22,873 | angr.state_plugins.callstack | Returning to an unexpected address 0x1
+WARNING  | 2023-03-08 11:36:34,070 | angr.state_plugins.callstack | Returning to an unexpected address 0x1
+ERROR    | 2023-03-08 11:36:36,700 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,701 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,716 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,718 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,730 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,732 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,741 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,743 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,754 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,756 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,763 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,765 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,771 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,772 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,778 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,779 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,785 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,786 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,798 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,799 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,801 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,822 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,824 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,827 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,829 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,838 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,849 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,851 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,852 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,853 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,860 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,870 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,871 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,873 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,874 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,879 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,880 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,885 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,886 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:36,888 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,889 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:36,895 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:36,896 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,007 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,011 | angr.analyses.cfg.indirect_jump_resolvers.jumptable.JumpTableProcessor | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,029 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,031 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,044 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,047 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,060 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,063 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,076 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,077 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,084 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,086 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,092 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:37,094 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,095 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,109 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:37,110 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:37,112 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,113 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,118 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,122 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:37,124 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:37,127 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:37,128 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_64HLtoV128.
+ERROR    | 2023-03-08 11:36:37,130 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,131 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+ERROR    | 2023-03-08 11:36:37,134 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Binop Iop_Sub8x16.
+ERROR    | 2023-03-08 11:36:37,136 | angr.analyses.propagator.engine_vex.SimEnginePropagatorVEX | Unsupported Unop Iop_GetMSBs8x16.
+WARNING  | 2023-03-08 11:36:41,930 | angr.state_plugins.posix | Program is requesting a symbolic brk! This cannot be emulated cleanly!
+WARNING  | 2023-03-08 11:36:41,935 | angr.state_plugins.posix | Program is requesting a symbolic brk! This cannot be emulated cleanly!
+
+
+
+---------------------------------------------------------------------------
+
+KeyboardInterrupt                         Traceback (most recent call last)
+
+Cell In[12], line 1
+----> 1 cfg = project.analyses.CFGEmulated(keep_state=True)
+      2 print(cfg.edges)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/analyses/analysis.py:143, in AnalysisFactory.__call__(self, *args, **kwargs)
+    137 show_progressbar = kwargs.pop("show_progressbar", False)
+    139 w = self.prep(
+    140     fail_fast=fail_fast, kb=kb, progress_callback=progress_callback, show_progressbar=show_progressbar
+    141 )
+--> 143 r = w(*args, **kwargs)
+    144 # clean up so that it's always pickleable
+    145 r._progressbar = None
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/analyses/analysis.py:128, in AnalysisFactory.prep.<locals>.wrapper(*args, **kwargs)
+    125 oself._progress_callback = progress_callback
+    127 oself._show_progressbar = show_progressbar
+--> 128 oself.__init__(*args, **kwargs)
+    129 return oself
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/analyses/cfg/cfg_emulated.py:344, in CFGEmulated.__init__(self, context_sensitivity_level, start, avoid_runs, enable_function_hints, call_depth, call_tracing_filter, initial_state, starts, keep_state, indirect_jump_target_limit, resolve_indirect_jumps, enable_advanced_backward_slicing, enable_symbolic_back_traversal, indirect_jump_resolvers, additional_edges, no_construct, normalize, max_iterations, address_whitelist, base_graph, iropt_level, max_steps, state_add_options, state_remove_options, model)
+    342 if not no_construct:
+    343     self._initialize_cfg()
+--> 344     self._analyze()
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/analyses/forward_analysis/forward_analysis.py:248, in ForwardAnalysis._analyze(self)
+    241 self._pre_analysis()
+    243 if self._graph_visitor is None:
+    244     # There is no base graph that we can rely on. The analysis itself should generate successors for the
+    245     # current job.
+    246     # An example is the CFG recovery.
+--> 248     self._analysis_core_baremetal()
+    250 else:
+    251     # We have a base graph to follow. Just handle the current job.
+    253     self._analysis_core_graph()
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/analyses/forward_analysis/forward_analysis.py:377, in ForwardAnalysis._analysis_core_baremetal(self)
+    374 job_info = self._job_info_queue[0]
+    376 try:
+--> 377     self._pre_job_handling(job_info.job)
+    378 except AngrDelayJobNotice:
+    379     # delay the handling of this job
+    380     continue
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/analyses/cfg/cfg_emulated.py:1186, in CFGEmulated._pre_job_handling(self, job)
+   1183 job.state._inspect("cfg_handle_job", BP_BEFORE)
+   1185 # Get a SimSuccessors out of current job
+-> 1186 sim_successors, exception_info, _ = self._get_simsuccessors(addr, job, current_function_addr=job.func_addr)
+   1188 # determine the depth of this basic block
+   1189 if self._max_steps is None:
+   1190     # it's unnecessary to track depth when we are not limiting max_steps
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/analyses/cfg/cfg_emulated.py:2951, in CFGEmulated._get_simsuccessors(self, addr, job, current_function_addr)
+   2949         jumpkind = state.history.jumpkind
+   2950         jumpkind = "Ijk_Boring" if jumpkind is None else jumpkind
+-> 2951         sim_successors = self.project.factory.successors(
+   2952             state, jumpkind=jumpkind, size=block_size, opt_level=self._iropt_level
+   2953         )
+   2955 except (SimFastPathError, SimSolverModeError) as ex:
+   2956     if saved_state.mode == "fastpath":
+   2957         # Got a SimFastPathError or SimSolverModeError in FastPath mode.
+   2958         # We wanna switch to symbolic mode for current IRSB.
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/factory.py:74, in AngrObjectFactory.successors(self, engine, *args, **kwargs)
+     72 if engine is not None:
+     73     return engine.process(*args, **kwargs)
+---> 74 return self.default_engine.process(*args, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/slicing.py:20, in VEXSlicingMixin.process(self, skip_stmts, last_stmt, whitelist, *args, **kwargs)
+     18 self._last_stmt = last_stmt
+     19 self._whitelist = whitelist
+---> 20 return super().process(*args, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/engine.py:163, in SuccessorsMixin.process(***failed resolving arguments***)
+    161 self.successors = new_state._inspect_getattr("sim_successors", self.successors)
+    162 try:
+--> 163     self.process_successors(self.successors, **kwargs)
+    164 except SimException as e:
+    165     if o.EXCEPTION_HANDLING not in old_state.options:
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/failure.py:24, in SimEngineFailure.process_successors(self, successors, **kwargs)
+     21     terminator = SIM_PROCEDURES["stubs"]["PathTerminator"](project=self.project)
+     22     return self.process_procedure(state, successors, terminator, **kwargs)
+---> 24 return super().process_successors(successors, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/syscall.py:26, in SimEngineSyscall.process_successors(self, successors, **kwargs)
+     19 # we have at this point entered the next step so we need to check the previous jumpkind
+     20 if (
+     21     not state.history
+     22     or not state.history.parent
+     23     or not state.history.parent.jumpkind
+     24     or not state.history.parent.jumpkind.startswith("Ijk_Sys")
+     25 ):
+---> 26     return super().process_successors(successors, **kwargs)
+     28 l.debug("Invoking system call handler")
+     29 sys_procedure = self.project.simos.syscall(state)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/hook.py:56, in HooksMixin.process_successors(self, successors, procedure, **kwargs)
+     54     procedure = self._lookup_hook(state, procedure)
+     55 if procedure is None:
+---> 56     return super().process_successors(successors, procedure=procedure, **kwargs)
+     58 if isinstance(procedure.addr, SootAddressDescriptor):
+     59     l.debug("Running %s (originally at %r)", repr(procedure), procedure.addr)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/unicorn.py:389, in SimEngineUnicorn.process_successors(self, successors, **kwargs)
+    387 state = self.state
+    388 if not self.__check(**kwargs):
+--> 389     return super().process_successors(successors, **kwargs)
+    391 extra_stop_points = kwargs.get("extra_stop_points", None)
+    392 last_block_details = kwargs.get("last_block_details", None)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/soot/engine.py:68, in SootMixin.process_successors(self, successors, **kwargs)
+     66 state = self.state
+     67 if not isinstance(state._ip, SootAddressDescriptor):
+---> 68     return super().process_successors(successors, **kwargs)
+     69 addr = state._ip
+     71 if isinstance(addr, SootAddressTerminator):
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/heavy.py:174, in HeavyVEXMixin.process_successors(self, successors, irsb, insn_text, insn_bytes, thumb, size, num_inst, extra_stop_points, opt_level, **kwargs)
+    171 successors.artifacts["insn_addrs"] = []
+    173 try:
+--> 174     self.handle_vex_block(irsb)
+    175 except errors.SimReliftException as e:
+    176     self.state = e.state
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/super_fastpath.py:25, in SuperFastpathMixin.handle_vex_block(self, irsb)
+     22             self._skip_stmts = max(self._skip_stmts, i)
+     23             break
+---> 25 super().handle_vex_block(irsb)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/slicing.py:26, in VEXSlicingMixin.handle_vex_block(self, irsb)
+     22 def handle_vex_block(self, irsb):
+     23     self.__no_exit_sliced = not self._check_vex_slice(DEFAULT_STATEMENT) and not any(
+     24         self._check_vex_slice(stmt_idx) for stmt_idx, stmt in enumerate(irsb.statements) if stmt.tag == "Ist_Exit"
+     25     )
+---> 26     super().handle_vex_block(irsb)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/actions.py:31, in TrackActionsMixin.handle_vex_block(self, irsb)
+     29 def handle_vex_block(self, irsb):
+     30     self.__tmp_deps = {}
+---> 31     super().handle_vex_block(irsb)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/inspect.py:49, in SimInspectMixin.handle_vex_block(self, irsb)
+     47 def handle_vex_block(self, irsb):
+     48     self.state._inspect("irsb", BP_BEFORE, address=irsb.addr)
+---> 49     super().handle_vex_block(irsb)
+     50     self.state._inspect("instruction", BP_AFTER)
+     51     self.state._inspect("irsb", BP_AFTER, address=irsb.addr)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/light.py:548, in VEXMixin.handle_vex_block(self, irsb)
+    546 for stmt_idx, stmt in enumerate(irsb.statements):
+    547     self.stmt_idx = stmt_idx
+--> 548     self._handle_vex_stmt(stmt)
+    549 self.stmt_idx = DEFAULT_STATEMENT
+    550 self._handle_vex_defaultexit(irsb.next, irsb.jumpkind)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/slicing.py:30, in VEXSlicingMixin._handle_vex_stmt(self, stmt)
+     28 def _handle_vex_stmt(self, stmt):
+     29     if self._check_vex_slice(self.stmt_idx):
+---> 30         super()._handle_vex_stmt(stmt)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/inspect.py:44, in SimInspectMixin._handle_vex_stmt(self, stmt)
+     42 def _handle_vex_stmt(self, stmt):
+     43     self.state._inspect("statement", BP_BEFORE, statement=self.stmt_idx)
+---> 44     super()._handle_vex_stmt(stmt)
+     45     self.state._inspect("statement", BP_AFTER)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/resilience.py:39, in _make_wrapper.<locals>.inner(self, *iargs, **ikwargs)
+     37 def inner(self, *iargs, **ikwargs):
+     38     try:
+---> 39         return getattr(super(VEXResilienceMixin, self), func)(*iargs, **ikwargs)
+     40     except excs as e:
+     41         for exc, handler in zip(excs, handlers):
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/heavy.py:245, in HeavyVEXMixin._handle_vex_stmt(self, stmt)
+    243 def _handle_vex_stmt(self, stmt):
+    244     self.state.scratch.stmt_idx = self.stmt_idx
+--> 245     super()._handle_vex_stmt(stmt)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/light.py:52, in VEXMixin._handle_vex_stmt(self, stmt)
+     50 def _handle_vex_stmt(self, stmt: pyvex.stmt.IRStmt):
+     51     handler = self._vex_stmt_handlers[stmt.tag_int]
+---> 52     handler(stmt)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/light.py:226, in VEXMixin._handle_vex_stmt_Exit(self, stmt)
+    225 def _handle_vex_stmt_Exit(self, stmt: pyvex.stmt.Exit):
+--> 226     self._perform_vex_stmt_Exit(
+    227         self._analyze_vex_stmt_Exit_guard(stmt.guard), self._handle_vex_const(stmt.dst), stmt.jk
+    228     )
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/actions.py:225, in TrackActionsMixin._perform_vex_stmt_Exit(self, guard_bundle, target_bundle, jumpkind)
+    220     target_ao = SimActionObject(target, deps=target_deps, state=self.state)
+    221     self.state.history.add_action(
+    222         SimActionExit(self.state, target=target_ao, condition=guard_ao, exit_type=SimActionExit.CONDITIONAL)
+    223     )
+--> 225 super()._perform_vex_stmt_Exit(guard, target, jumpkind)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/heavy.py:297, in HeavyVEXMixin._perform_vex_stmt_Exit(self, guard, target, jumpkind)
+    295         cont_state = self.state
+    296 else:
+--> 297     exit_state = self.state.copy()
+    298     cont_state = self.state
+    300 if exit_state is not None:
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/sim_state.py:642, in SimState.copy(self)
+    639     raise SimStateError("global condition was not cleared before state.copy().")
+    641 c_plugins = self._copy_plugins()
+--> 642 state = SimState(
+    643     project=self.project,
+    644     arch=self.arch,
+    645     plugins=c_plugins,
+    646     options=self.options.copy(),
+    647     mode=self.mode,
+    648     os_name=self.os_name,
+    649 )
+    651 if self._is_java_jni_project:
+    652     state.ip_is_soot_addr = self.ip_is_soot_addr
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/sim_state.py:260, in SimState.__init__(self, project, arch, plugins, mode, options, add_options, remove_options, special_memory_filler, os_name, plugin_preset, cle_memory_backer, dict_memory_backer, permissions_map, default_permissions, stack_perms, stack_end, stack_size, regioned_memory_cls, **kwargs)
+    257         self.register_plugin("registers_vex", native_sim_registers, inhibit_init=True)
+    259 for p in list(self.plugins.values()):
+--> 260     p.init_state()
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/state_plugins/history.py:67, in SimStateHistory.init_state(self)
+     66 def init_state(self):
+---> 67     self.successor_ip = self.state._ip
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/sim_state.py:352, in SimState._ip(self)
+    346 """
+    347 Get the instruction pointer expression without triggering SimInspect breakpoints or generating SimActions.
+    348 
+    349 :return: an expression
+    350 """
+    351 try:
+--> 352     return self.regs._ip
+    353 except AttributeError as e:
+    354     raise TypeError(str(e)) from e
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/state_plugins/view.py:41, in SimRegNameView.__getattr__(self, k)
+     38     events = True
+     40 try:
+---> 41     return state.registers.load(k, inspect=inspect, disable_actions=disable_actions, events=events)
+     42 except KeyError:
+     43     return super().__getattribute__(k)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/name_resolution_mixin.py:65, in NameResolutionMixin.load(self, addr, size, **kwargs)
+     63 if isinstance(addr, str):
+     64     named_addr, named_size = self._resolve_location_name(addr, is_write=False)
+---> 65     return super().load(named_addr, size=named_size if size is None else size, **kwargs)
+     66 else:
+     67     return super().load(addr, size=size, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/simple_interface_mixin.py:10, in SimpleInterfaceMixin.load(self, addr, size, endness, condition, fallback, **kwargs)
+      8 def load(self, addr, size=None, endness=None, condition=None, fallback=None, **kwargs):
+      9     tsize = self._translate_size(size, None)
+---> 10     return super().load(
+     11         self._translate_addr(addr),
+     12         size=tsize,
+     13         endness=self._translate_endness(endness),
+     14         condition=self._translate_cond(condition),
+     15         fallback=self._translate_data(fallback, tsize) if fallback is not None else None,
+     16         **kwargs,
+     17     )
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/clouseau_mixin.py:66, in InspectMixinHigh.load(self, addr, size, condition, endness, inspect, **kwargs)
+     64 def load(self, addr, size=None, condition=None, endness=None, inspect=True, **kwargs):
+     65     if not inspect or not self.state.supports_inspect:
+---> 66         return super().load(addr, size=size, condition=condition, endness=endness, inspect=inspect, **kwargs)
+     68     if self.category == "reg":
+     69         self.state._inspect(
+     70             "reg_read",
+     71             BP_BEFORE,
+   (...)
+     75             reg_read_endness=endness,
+     76         )
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/conditional_store_mixin.py:7, in ConditionalMixin.load(self, addr, condition, fallback, **kwargs)
+      6 class ConditionalMixin(MemoryMixin):
+----> 7     def load(self, addr, condition=None, fallback=None, **kwargs):
+      8         res = super().load(addr, condition=condition, **kwargs)
+      9         if condition is not None and fallback is not None:
+
+
+KeyboardInterrupt: 
+#+end_example
+
+#+begin_src python
+import angr
+project = angr.Project("examples/ex03")
+from angr.exploration_techniques import dfs
+state = project.factory.entry_state()
+simgr = project.factory.simgr(state)
+dfs.DFS().setup(simgr)
+simgr.explore(find = 0x4012ae)
+simgr.found[0].posix.dumps(0)
+#+end_src
+
+#+begin_example
+WARNING  | 2023-03-29 18:59:10,357 | angr.storage.memory_mixins.default_filler_mixin | The program is accessing memory with an unspecified value. This could indicate unwanted behavior.
+WARNING  | 2023-03-29 18:59:10,357 | angr.storage.memory_mixins.default_filler_mixin | angr will cope with this by generating an unconstrained symbolic variable and continuing. You can resolve this by:
+WARNING  | 2023-03-29 18:59:10,358 | angr.storage.memory_mixins.default_filler_mixin | 1) setting a value to the initial state
+WARNING  | 2023-03-29 18:59:10,358 | angr.storage.memory_mixins.default_filler_mixin | 2) adding the state option ZERO_FILL_UNCONSTRAINED_{MEMORY,REGISTERS}, to make unknown regions hold null
+WARNING  | 2023-03-29 18:59:10,358 | angr.storage.memory_mixins.default_filler_mixin | 3) adding the state option SYMBOL_FILL_UNCONSTRAINED_{MEMORY,REGISTERS}, to suppress these messages.
+WARNING  | 2023-03-29 18:59:10,359 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xc0000f7d with 39 unconstrained bytes referenced from 0x800000 (memcpy+0x0 in extern-address space (0x0))
+WARNING  | 2023-03-29 18:59:11,539 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0x7fffffffffeff20 with 8 unconstrained bytes referenced from 0x800000 (memcpy+0x0 in extern-address space (0x0))
+WARNING  | 2023-03-29 18:59:11,540 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0x7fffffffffeff30 with 1 unconstrained bytes referenced from 0x800000 (memcpy+0x0 in extern-address space (0x0))
+WARNING  | 2023-03-29 18:59:12,423 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0x0 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:13,316 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xffffffffffc00000 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:14,875 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xfffffffff8000000 with 17 unconstrained bytes referenced from 0x800000 (memcpy+0x0 in extern-address space (0x0))
+WARNING  | 2023-03-29 18:59:15,892 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xf800000000000000 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:16,717 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0x1 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:18,281 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xffffffffffc00001 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:19,938 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xf800000000000001 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:21,228 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0x2 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:24,642 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xffffffffffc00002 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:28,000 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xf800000000000002 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:30,445 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0x3 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:37,482 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xffffffffffc00003 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:44,118 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xf800000000000003 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 18:59:49,223 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0x4 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 19:00:03,395 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xffffffffffc00004 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+WARNING  | 2023-03-29 19:00:16,507 | angr.storage.memory_mixins.default_filler_mixin | Filling memory at 0xf800000000000004 with 1 unconstrained bytes referenced from 0x40126f (main+0xcd in ex03 (0x40126f))
+
+
+
+---------------------------------------------------------------------------
+
+KeyboardInterrupt                         Traceback (most recent call last)
+
+Cell In[2], line 7
+      5 simgr = project.factory.simgr(state)
+      6 dfs.DFS().setup(simgr)
+----> 7 simgr.explore(find = 0x4012ae)
+      8 simgr.found[0].posix.dumps(0)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/sim_manager.py:315, in SimulationManager.explore(self, stash, n, find, avoid, find_stash, avoid_stash, cfg, num_find, avoid_priority, **kwargs)
+    312         break
+    314 try:
+--> 315     self.run(stash=stash, n=n, **kwargs)
+    316 finally:
+    317     self.remove_technique(tech)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/sim_manager.py:345, in SimulationManager.run(self, stash, n, until, **kwargs)
+    343 for _ in itertools.count() if n is None else range(0, n):
+    344     if not self.complete() and self._stashes[stash]:
+--> 345         self.step(stash=stash, **kwargs)
+    346         if not (until and until(self)):
+    347             continue
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/misc/hookset.py:96, in HookedMethod.__call__(self, *args, **kwargs)
+     94 current_hook = self.pending.pop()
+     95 try:
+---> 96     result = current_hook(self.func.__self__, *args, **kwargs)
+     97 finally:
+     98     self.pending.append(current_hook)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/exploration_techniques/explorer.py:108, in Explorer.step(self, simgr, stash, **kwargs)
+    106 def step(self, simgr, stash="active", **kwargs):
+    107     base_extra_stop_points = set(kwargs.pop("extra_stop_points", []))
+--> 108     return simgr.step(stash=stash, extra_stop_points=base_extra_stop_points | self._extra_stop_points, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/misc/hookset.py:96, in HookedMethod.__call__(self, *args, **kwargs)
+     94 current_hook = self.pending.pop()
+     95 try:
+---> 96     result = current_hook(self.func.__self__, *args, **kwargs)
+     97 finally:
+     98     self.pending.append(current_hook)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/exploration_techniques/suggestions.py:43, in Suggestions.step(self, simgr, stash, **kwargs)
+     42 def step(self, simgr, stash="active", **kwargs):
+---> 43     simgr.step(stash=stash, **kwargs)
+     45     for state in simgr.stashes.get("interrupted", []):
+     46         if id(state) in self.suggested:
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/misc/hookset.py:101, in HookedMethod.__call__(self, *args, **kwargs)
+     99     return result
+    100 else:
+--> 101     return self.func(*args, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/sim_manager.py:454, in SimulationManager.step(self, stash, target_stash, n, selector_func, step_func, error_list, successor_func, until, filter_func, **run_args)
+    450     continue
+    452 pre_errored = len(error_list)
+--> 454 successors = self.step_state(state, successor_func=successor_func, error_list=error_list, **run_args)
+    455 # handle degenerate stepping cases here. desired behavior:
+    456 # if a step produced only unsat states, always add them to the unsat stash since this usually indicates bugs
+    457 # if a step produced sat states and save_unsat is False, drop the unsats
+    458 # if a step produced no successors, period, add the original state to deadended
+    459 
+    460 # first check if anything happened besides unsat. that gates all this behavior
+    461 if not any(v for k, v in successors.items() if k != "unsat") and len(error_list) == pre_errored:
+    462     # then check if there were some unsats
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/sim_manager.py:495, in SimulationManager.step_state(self, state, successor_func, error_list, **run_args)
+    493 error_list = error_list if error_list is not None else self._errored
+    494 try:
+--> 495     successors = self.successors(state, successor_func=successor_func, **run_args)
+    496     stashes = {
+    497         None: successors.flat_successors,
+    498         "unsat": successors.unsat_successors,
+    499         "unconstrained": successors.unconstrained_successors,
+    500     }
+    502 except (SimUnsatError, claripy.UnsatError) as e:
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/sim_manager.py:545, in SimulationManager.successors(self, state, successor_func, **run_args)
+    543 if successor_func is not None:
+    544     return successor_func(state, **run_args)
+--> 545 return self._project.factory.successors(state, **run_args)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/factory.py:74, in AngrObjectFactory.successors(self, engine, *args, **kwargs)
+     72 if engine is not None:
+     73     return engine.process(*args, **kwargs)
+---> 74 return self.default_engine.process(*args, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/slicing.py:20, in VEXSlicingMixin.process(self, skip_stmts, last_stmt, whitelist, *args, **kwargs)
+     18 self._last_stmt = last_stmt
+     19 self._whitelist = whitelist
+---> 20 return super().process(*args, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/engine.py:163, in SuccessorsMixin.process(***failed resolving arguments***)
+    161 self.successors = new_state._inspect_getattr("sim_successors", self.successors)
+    162 try:
+--> 163     self.process_successors(self.successors, **kwargs)
+    164 except SimException as e:
+    165     if o.EXCEPTION_HANDLING not in old_state.options:
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/failure.py:24, in SimEngineFailure.process_successors(self, successors, **kwargs)
+     21     terminator = SIM_PROCEDURES["stubs"]["PathTerminator"](project=self.project)
+     22     return self.process_procedure(state, successors, terminator, **kwargs)
+---> 24 return super().process_successors(successors, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/syscall.py:26, in SimEngineSyscall.process_successors(self, successors, **kwargs)
+     19 # we have at this point entered the next step so we need to check the previous jumpkind
+     20 if (
+     21     not state.history
+     22     or not state.history.parent
+     23     or not state.history.parent.jumpkind
+     24     or not state.history.parent.jumpkind.startswith("Ijk_Sys")
+     25 ):
+---> 26     return super().process_successors(successors, **kwargs)
+     28 l.debug("Invoking system call handler")
+     29 sys_procedure = self.project.simos.syscall(state)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/hook.py:56, in HooksMixin.process_successors(self, successors, procedure, **kwargs)
+     54     procedure = self._lookup_hook(state, procedure)
+     55 if procedure is None:
+---> 56     return super().process_successors(successors, procedure=procedure, **kwargs)
+     58 if isinstance(procedure.addr, SootAddressDescriptor):
+     59     l.debug("Running %s (originally at %r)", repr(procedure), procedure.addr)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/unicorn.py:389, in SimEngineUnicorn.process_successors(self, successors, **kwargs)
+    387 state = self.state
+    388 if not self.__check(**kwargs):
+--> 389     return super().process_successors(successors, **kwargs)
+    391 extra_stop_points = kwargs.get("extra_stop_points", None)
+    392 last_block_details = kwargs.get("last_block_details", None)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/soot/engine.py:68, in SootMixin.process_successors(self, successors, **kwargs)
+     66 state = self.state
+     67 if not isinstance(state._ip, SootAddressDescriptor):
+---> 68     return super().process_successors(successors, **kwargs)
+     69 addr = state._ip
+     71 if isinstance(addr, SootAddressTerminator):
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/heavy.py:174, in HeavyVEXMixin.process_successors(self, successors, irsb, insn_text, insn_bytes, thumb, size, num_inst, extra_stop_points, opt_level, **kwargs)
+    171 successors.artifacts["insn_addrs"] = []
+    173 try:
+--> 174     self.handle_vex_block(irsb)
+    175 except errors.SimReliftException as e:
+    176     self.state = e.state
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/super_fastpath.py:25, in SuperFastpathMixin.handle_vex_block(self, irsb)
+     22             self._skip_stmts = max(self._skip_stmts, i)
+     23             break
+---> 25 super().handle_vex_block(irsb)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/slicing.py:26, in VEXSlicingMixin.handle_vex_block(self, irsb)
+     22 def handle_vex_block(self, irsb):
+     23     self.__no_exit_sliced = not self._check_vex_slice(DEFAULT_STATEMENT) and not any(
+     24         self._check_vex_slice(stmt_idx) for stmt_idx, stmt in enumerate(irsb.statements) if stmt.tag == "Ist_Exit"
+     25     )
+---> 26     super().handle_vex_block(irsb)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/actions.py:31, in TrackActionsMixin.handle_vex_block(self, irsb)
+     29 def handle_vex_block(self, irsb):
+     30     self.__tmp_deps = {}
+---> 31     super().handle_vex_block(irsb)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/inspect.py:49, in SimInspectMixin.handle_vex_block(self, irsb)
+     47 def handle_vex_block(self, irsb):
+     48     self.state._inspect("irsb", BP_BEFORE, address=irsb.addr)
+---> 49     super().handle_vex_block(irsb)
+     50     self.state._inspect("instruction", BP_AFTER)
+     51     self.state._inspect("irsb", BP_AFTER, address=irsb.addr)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/light.py:548, in VEXMixin.handle_vex_block(self, irsb)
+    546 for stmt_idx, stmt in enumerate(irsb.statements):
+    547     self.stmt_idx = stmt_idx
+--> 548     self._handle_vex_stmt(stmt)
+    549 self.stmt_idx = DEFAULT_STATEMENT
+    550 self._handle_vex_defaultexit(irsb.next, irsb.jumpkind)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/slicing.py:30, in VEXSlicingMixin._handle_vex_stmt(self, stmt)
+     28 def _handle_vex_stmt(self, stmt):
+     29     if self._check_vex_slice(self.stmt_idx):
+---> 30         super()._handle_vex_stmt(stmt)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/inspect.py:44, in SimInspectMixin._handle_vex_stmt(self, stmt)
+     42 def _handle_vex_stmt(self, stmt):
+     43     self.state._inspect("statement", BP_BEFORE, statement=self.stmt_idx)
+---> 44     super()._handle_vex_stmt(stmt)
+     45     self.state._inspect("statement", BP_AFTER)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/resilience.py:39, in _make_wrapper.<locals>.inner(self, *iargs, **ikwargs)
+     37 def inner(self, *iargs, **ikwargs):
+     38     try:
+---> 39         return getattr(super(VEXResilienceMixin, self), func)(*iargs, **ikwargs)
+     40     except excs as e:
+     41         for exc, handler in zip(excs, handlers):
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/heavy.py:245, in HeavyVEXMixin._handle_vex_stmt(self, stmt)
+    243 def _handle_vex_stmt(self, stmt):
+    244     self.state.scratch.stmt_idx = self.stmt_idx
+--> 245     super()._handle_vex_stmt(stmt)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/light.py:52, in VEXMixin._handle_vex_stmt(self, stmt)
+     50 def _handle_vex_stmt(self, stmt: pyvex.stmt.IRStmt):
+     51     handler = self._vex_stmt_handlers[stmt.tag_int]
+---> 52     handler(stmt)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/light.py:203, in VEXMixin._handle_vex_stmt_WrTmp(self, stmt)
+    202 def _handle_vex_stmt_WrTmp(self, stmt):
+--> 203     self._perform_vex_stmt_WrTmp(stmt.tmp, self._analyze_vex_stmt_WrTmp_data(stmt.data))
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/light.py:200, in VEXMixin._analyze_vex_stmt_WrTmp_data(self, *a, **kw)
+    199 def _analyze_vex_stmt_WrTmp_data(self, *a, **kw):
+--> 200     return self._handle_vex_expr(*a, **kw)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/inspect.py:35, in SimInspectMixin._handle_vex_expr(self, expr)
+     33 if expr_result is not NO_OVERRIDE:
+     34     return expr_result
+---> 35 return super()._handle_vex_expr(expr)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/light.py:56, in VEXMixin._handle_vex_expr(self, expr)
+     54 def _handle_vex_expr(self, expr: pyvex.expr.IRExpr):
+     55     handler = self._vex_expr_handlers[expr.tag_int]
+---> 56     result = handler(expr)
+     57     return self._instrument_vex_expr(result)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/light/light.py:87, in VEXMixin._handle_vex_expr_Load(self, expr)
+     86 def _handle_vex_expr_Load(self, expr: pyvex.expr.Load):
+---> 87     return self._perform_vex_expr_Load(self._analyze_vex_expr_Load_addr(expr.addr), expr.ty, expr.end)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/actions.py:127, in TrackActionsMixin._perform_vex_expr_Load(self, addr_bundle, ty, end, condition, **kwargs)
+    124 else:
+    125     condition_deps = None
+--> 127 result = super()._perform_vex_expr_Load(addr, ty, end, condition=condition, **kwargs)
+    129 if o.TRACK_MEMORY_ACTIONS in self.state.options:
+    130     addr_ao = SimActionObject(addr, deps=addr_deps, state=self.state)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/heavy.py:342, in HeavyVEXMixin._perform_vex_expr_Load(self, addr, ty, endness, **kwargs)
+    341 def _perform_vex_expr_Load(self, addr, ty, endness, **kwargs):
+--> 342     result = super()._perform_vex_expr_Load(addr, ty, endness, **kwargs)
+    343     if o.UNINITIALIZED_ACCESS_AWARENESS in self.state.options:
+    344         if getattr(addr._model_vsa, "uninitialized", False):
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/claripy/datalayer.py:99, in ClaripyDataMixin._perform_vex_expr_Load(self, addr, ty, endness, **kwargs)
+     98 def _perform_vex_expr_Load(self, addr, ty, endness, **kwargs):
+---> 99     res = super()._perform_vex_expr_Load(addr, ty, endness, **kwargs)
+    100     if ty.startswith("Ity_F"):
+    101         return res.raw_to_fp()
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/engines/vex/heavy/heavy.py:31, in SimStateStorageMixin._perform_vex_expr_Load(self, addr, ty, endness, action, inspect, condition, **kwargs)
+     30 def _perform_vex_expr_Load(self, addr, ty, endness, action=None, inspect=True, condition=None, **kwargs):
+---> 31     return self.state.memory.load(
+     32         addr, self._ty_to_bytes(ty), endness=endness, action=action, inspect=inspect, condition=condition
+     33     )
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/unwrapper_mixin.py:15, in UnwrapperMixin.load(self, addr, size, condition, fallback, **kwargs)
+     14 def load(self, addr, size=None, condition=None, fallback=None, **kwargs):
+---> 15     return super().load(
+     16         _raw_ast(addr), size=_raw_ast(size), condition=_raw_ast(condition), fallback=_raw_ast(fallback), **kwargs
+     17     )
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/name_resolution_mixin.py:67, in NameResolutionMixin.load(self, addr, size, **kwargs)
+     65     return super().load(named_addr, size=named_size if size is None else size, **kwargs)
+     66 else:
+---> 67     return super().load(addr, size=size, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/bvv_conversion_mixin.py:30, in DataNormalizationMixin.load(self, addr, size, fallback, **kwargs)
+     28 def load(self, addr, size=None, fallback=None, **kwargs):
+     29     fallback_bv = self._convert_to_ast(fallback, size, self.state.arch.byte_width) if fallback is not None else None
+---> 30     return super().load(addr, size=size, fallback=fallback_bv, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/clouseau_mixin.py:66, in InspectMixinHigh.load(self, addr, size, condition, endness, inspect, **kwargs)
+     64 def load(self, addr, size=None, condition=None, endness=None, inspect=True, **kwargs):
+     65     if not inspect or not self.state.supports_inspect:
+---> 66         return super().load(addr, size=size, condition=condition, endness=endness, inspect=inspect, **kwargs)
+     68     if self.category == "reg":
+     69         self.state._inspect(
+     70             "reg_read",
+     71             BP_BEFORE,
+   (...)
+     75             reg_read_endness=endness,
+     76         )
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/actions_mixin.py:13, in ActionsMixinHigh.load(self, addr, size, condition, fallback, disable_actions, action, **kwargs)
+     10 if not disable_actions and o.AUTO_REFS in self.state.options and action is None:
+     11     action = self.__make_action("read", addr, size, None, condition, fallback)
+---> 13 r = super().load(addr, size=size, condition=condition, fallback=fallback, action=action, **kwargs)
+     15 if not disable_actions:
+     16     if o.AST_DEPS in self.state.options and self.category == "reg":
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/underconstrained_mixin.py:24, in UnderconstrainedMixin.load(self, addr, **kwargs)
+     22 def load(self, addr, **kwargs):
+     23     self._constrain_underconstrained_index(addr)
+---> 24     return super().load(addr, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/size_resolution_mixin.py:91, in SizeConcretizationMixin.load(self, addr, size, **kwargs)
+     89 def load(self, addr, size=None, **kwargs):
+     90     if getattr(size, "op", "BVV") == "BVV":
+---> 91         return super().load(addr, size=size, **kwargs)
+     93     l.warning("Loading symbolic size via max. be careful.")
+     94     out_size = self.state.solver.max(size)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/size_resolution_mixin.py:29, in SizeNormalizationMixin.load(self, addr, size, **kwargs)
+     26 else:
+     27     raise Exception("Size must be concretely resolved by this point in the memory stack")
+---> 29 return super().load(addr, size=out_size, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/address_concretization_mixin.py:278, in AddressConcretizationMixin.load(self, addr, size, condition, **kwargs)
+    275     return self._default_value(None, size, name="symbolic_read_unconstrained", **kwargs)
+    277 try:
+--> 278     concrete_addrs = self._interleave_ints(sorted(self.concretize_read_addr(addr, condition=condition)))
+    279 except SimMemoryError:
+    280     if options.CONSERVATIVE_READ_STRATEGY in self.state.options:
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/address_concretization_mixin.py:223, in AddressConcretizationMixin.concretize_read_addr(self, addr, strategies, condition)
+    220     return [self.state.solver.eval(addr)]
+    222 strategies = self.read_strategies if strategies is None else strategies
+--> 223 return self._apply_concretization_strategies(addr, strategies, "load", condition)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/storage/memory_mixins/address_concretization_mixin.py:175, in AddressConcretizationMixin._apply_concretization_strategies(self, addr, strategies, action, condition)
+    173 # let's try to apply it!
+    174 try:
+--> 175     a = s.concretize(self, e, extra_constraints=(condition,) if condition is not None else ())
+    176 except SimUnsatError:
+    177     a = None
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/concretization_strategies/__init__.py:62, in SimConcretizationStrategy.concretize(self, memory, addr, **kwargs)
+     57 """
+     58 Concretizes the address into a list of values.
+     59 If this strategy cannot handle this address, returns None.
+     60 """
+     61 if self._filter is None or self._filter(memory, addr):
+---> 62     return self._concretize(memory, addr, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/concretization_strategies/range.py:16, in SimConcretizationStrategyRange._concretize(self, memory, addr, **kwargs)
+     14 mn, mx = self._range(memory, addr, **kwargs)
+     15 if mx - mn <= self._limit:
+---> 16     return self._eval(memory, addr, self._limit, **kwargs)
+     17 return None
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/concretization_strategies/__init__.py:48, in SimConcretizationStrategy._eval(self, memory, addr, n, **kwargs)
+     46 if isinstance(addr, claripy.vsa.StridedInterval):
+     47     return addr.eval(n)
+---> 48 return memory.state.solver.eval_upto(addr, n, exact=kwargs.pop("exact", self._exact), **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/state_plugins/solver.py:839, in SimSolver.eval_upto(self, e, n, cast_to, **kwargs)
+    836 if concrete_val is not None:
+    837     return [self._cast_to(e, concrete_val, cast_to)]
+--> 839 cast_vals = [self._cast_to(e, v, cast_to) for v in self._eval(e, n, **kwargs)]
+    840 if len(cast_vals) == 0:
+    841     raise SimUnsatError("Not satisfiable: %s, expected up to %d solutions" % (e.shallow_repr(), n))
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/state_plugins/solver.py:172, in concrete_path_tuple.<locals>.concrete_shortcut_tuple(self, *args, **kwargs)
+    170 v = _concrete_value(args[0])
+    171 if v is None:
+--> 172     return f(self, *args, **kwargs)
+    173 else:
+    174     return (v,)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/state_plugins/sim_action_object.py:61, in ast_stripping_decorator.<locals>.ast_stripper(*args, **kwargs)
+     59 new_args = _raw_ast(args)
+     60 new_kwargs = _raw_ast(kwargs)
+---> 61 return f(*new_args, **new_kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/state_plugins/solver.py:94, in error_converter.<locals>.wrapped_f(*args, **kwargs)
+     91 @functools.wraps(f)
+     92 def wrapped_f(*args, **kwargs):
+     93     try:
+---> 94         return f(*args, **kwargs)
+     95     except claripy.UnsatError as e:
+     96         raise SimUnsatError("Got an unsat result") from e
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/angr/state_plugins/solver.py:597, in SimSolver._eval(self, e, n, extra_constraints, exact)
+    582 @concrete_path_tuple
+    583 @timed_function
+    584 @ast_stripping_decorator
+    585 @error_converter
+    586 def _eval(self, e, n, extra_constraints=(), exact=None):
+    587     """
+    588     Evaluate an expression, using the solver if necessary. Returns primitives.
+    589 
+   (...)
+    595     :rtype: tuple
+    596     """
+--> 597     return self._solver.eval(e, n, extra_constraints=self._adjust_constraint_list(extra_constraints), exact=exact)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/concrete_handler_mixin.py:7, in ConcreteHandlerMixin.eval(self, e, n, **kwargs)
+      5     return (c,)
+      6 else:
+----> 7     return super().eval(e, n, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/constraint_filter_mixin.py:40, in ConstraintFilterMixin.eval(self, e, n, extra_constraints, **kwargs)
+     38 def eval(self, e, n, extra_constraints=(), **kwargs):
+     39     ec = self._constraint_filter(extra_constraints)
+---> 40     return super().eval(e, n, extra_constraints=ec, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/sat_cache_mixin.py:53, in SatCacheMixin.eval(self, e, n, extra_constraints, **kwargs)
+     51     raise UnsatError("cached unsat")
+     52 try:
+---> 53     r = super().eval(e, n, extra_constraints=extra_constraints, **kwargs)
+     54     self._cached_satness = True
+     55     return r
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/simplify_helper_mixin.py:12, in SimplifyHelperMixin.eval(self, e, n, *args, **kwargs)
+     10 def eval(self, e, n, *args, **kwargs):
+     11     if n > 1:
+---> 12         self.simplify()
+     13     return super().eval(e, n, *args, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/constraint_deduplicator_mixin.py:22, in ConstraintDeduplicatorMixin.simplify(self, **kwargs)
+     21 def simplify(self, **kwargs):
+---> 22     added = super().simplify(**kwargs)
+     23     # we only add to the constraint hashes because we want to
+     24     # prevent previous (now simplified) constraints from
+     25     # being re-added
+     26     self._constraint_hashes.update(map(hash, added))
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/sat_cache_mixin.py:34, in SatCacheMixin.simplify(self)
+     33 def simplify(self):
+---> 34     new_constraints = super().simplify()
+     35     if len(new_constraints) > 0 and any(c is false for c in new_constraints):
+     36         self._cached_satness = False
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/simplify_skipper_mixin.py:36, in SimplifySkipperMixin.simplify(self, *args, **kwargs)
+     34 else:
+     35     self._simplified = True
+---> 36     return super().simplify(*args, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontends/composite_frontend.py:420, in CompositeFrontend.simplify(self)
+    417     continue
+    419 l.debug("... simplifying child solver %r", s)
+--> 420 s.simplify()
+    421 results = self._split_child(s)
+    422 for ns in results:
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/constraint_deduplicator_mixin.py:22, in ConstraintDeduplicatorMixin.simplify(self, **kwargs)
+     21 def simplify(self, **kwargs):
+---> 22     added = super().simplify(**kwargs)
+     23     # we only add to the constraint hashes because we want to
+     24     # prevent previous (now simplified) constraints from
+     25     # being re-added
+     26     self._constraint_hashes.update(map(hash, added))
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/sat_cache_mixin.py:34, in SatCacheMixin.simplify(self)
+     33 def simplify(self):
+---> 34     new_constraints = super().simplify()
+     35     if len(new_constraints) > 0 and any(c is false for c in new_constraints):
+     36         self._cached_satness = False
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/simplify_skipper_mixin.py:36, in SimplifySkipperMixin.simplify(self, *args, **kwargs)
+     34 else:
+     35     self._simplified = True
+---> 36     return super().simplify(*args, **kwargs)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontend_mixins/model_cache_mixin.py:159, in ModelCacheMixin.simplify(self, *args, **kwargs)
+    158 def simplify(self, *args, **kwargs):
+--> 159     results = super().simplify(*args, **kwargs)
+    160     if len(results) > 0 and any(c is false for c in results):
+    161         self._models.clear()
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontends/full_frontend.py:96, in FullFrontend.simplify(self)
+     95 def simplify(self):
+---> 96     ConstrainedFrontend.simplify(self)
+     98     # TODO: should we do this?
+     99     self._tls.solver = None
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/frontends/constrained_frontend.py:119, in ConstrainedFrontend.simplify(self)
+    116 if len(to_simplify) == 0:
+    117     return self.constraints
+--> 119 simplified = simplify(And(*to_simplify)).split(["And"])  # pylint:disable=no-member
+    120 self.constraints = no_simplify + simplified
+    121 return self.constraints
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/ast/base.py:1310, in simplify(e)
+   1307 if isinstance(e, Base) and e.op in operations.leaf_operations:
+   1308     return e
+-> 1310 s = e._first_backend("simplify")
+   1311 if s is None:
+   1312     l.debug("Unable to simplify expression")
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/ast/base.py:1230, in Base._first_backend(self, what)
+   1227     continue
+   1229 try:
+-> 1230     return getattr(b, what)(self)
+   1231 except BackendError:
+   1232     pass
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/backends/backend_z3.py:103, in condom.<locals>.z3_condom(*args, **kwargs)
+     99 """
+    100 The Z3 condom intercepts Z3Exceptions and throws a ClaripyZ3Error instead.
+    101 """
+    102 try:
+--> 103     return f(*args, **kwargs)
+    104 except z3.Z3Exception as ze:
+    105     raise ClaripyZ3Error() from ze
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/backends/backend_z3.py:912, in BackendZ3.simplify(self, expr)
+    910 if isinstance(expr_raw, z3.BoolRef):
+    911     boolref_tactics = self._boolref_tactics
+--> 912     s = boolref_tactics(expr_raw).as_expr()
+    913     # n = s.decl().name()
+    914     # if n == 'true':
+    915     #    s = True
+    916     # elif n == 'false':
+    917     #    s = False
+    918 elif isinstance(expr_raw, z3.BitVecRef):
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/z3/z3.py:8229, in Tactic.__call__(self, goal, *arguments, **keywords)
+   8221 def __call__(self, goal, *arguments, **keywords):
+   8222     """Apply tactic `self` to the given goal or Z3 Boolean expression using the given options.
+   8223 
+   8224     >>> x, y = Ints('x y')
+   (...)
+   8227     [[y >= 1]]
+   8228     """
+-> 8229     return self.apply(goal, *arguments, **keywords)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/z3/z3.py:8219, in Tactic.apply(self, goal, *arguments, **keywords)
+   8217     return ApplyResult(Z3_tactic_apply_ex(self.ctx.ref(), self.tactic, goal.goal, p.params), self.ctx)
+   8218 else:
+-> 8219     return ApplyResult(Z3_tactic_apply(self.ctx.ref(), self.tactic, goal.goal), self.ctx)
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/z3/z3core.py:3837, in Z3_tactic_apply(a0, a1, a2, _elems)
+   3836 def Z3_tactic_apply(a0, a1, a2, _elems=Elementaries(_lib.Z3_tactic_apply)):
+-> 3837   r = _elems.f(a0, a1, a2)
+   3838   _elems.Check(a0)
+   3839   return r
+
+
+File ~/ethical-hacking-2023/env/lib/python3.11/site-packages/claripy/backends/backend_z3.py:34, in handle_sigint(signals, frametype)
+     31     context.interrupt()
+     33 if old_handler is signal.default_int_handler:
+---> 34     raise KeyboardInterrupt()
+     35 if callable(old_handler):
+     36     old_handler(signals, frametype)
+
+
+KeyboardInterrupt: 
+#+end_example
+
+* Installing angr:
+:PROPERTIES:
+:CUSTOM_ID: installing-angr
+:END:
+#+begin_src sh
+virtualenv env
+source env/bin/activate
+pip install angr
+#+end_src
+
+* Program slices
+:PROPERTIES:
+:CUSTOM_ID: program-slices
+:END:
+#+begin_src python
+def fibandfact(n):
+    a,b = 1,1
+    c = 1
+    for i in range(n):
+        a,b = a+b,a
+        c = c*(i+1)
+    return b,c
+
+def fib(n):
+    a,b = 1,1
+    for i in range(n):
+        a,b = a+b,a
+    return b
+
+def fact(n):
+    c = 1
+    for i in range(n):
+        c = c*(i+1)
+    return c
+
+fibandfact(100) == (fib(100), fact(100))
+#+end_src

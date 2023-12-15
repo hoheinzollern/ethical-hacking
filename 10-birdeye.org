@@ -1,0 +1,157 @@
+* Breaking security assumptions
+:PROPERTIES:
+:CUSTOM_ID: breaking-security-assumptions
+:END:
+** Ethical hacking course - S2023
+:PROPERTIES:
+:CUSTOM_ID: ethical-hacking-course---s2023
+:END:
+** Alessandro Bruni
+:PROPERTIES:
+:CUSTOM_ID: alessandro-bruni
+:END:
+* Identify and break security assumptions!
+:PROPERTIES:
+:CUSTOM_ID: identify-and-break-security-assumptions
+:END:
+** Security assumptions are everywhere
+:PROPERTIES:
+:CUSTOM_ID: security-assumptions-are-everywhere
+:END:
+** Examples
+:PROPERTIES:
+:CUSTOM_ID: examples
+:END:
+- This has never happened before
+  - Therefore it will not happen, ever
+- Security products are secure
+  - Naturally, they can't be hacked
+- This is outside our threat model
+  - So, hackers will stay away and won't hack
+- Our employees are fully trusted
+  - No disgruntled people, no insider jobs
+- There is no public exploit for this bug
+  - Of course, it cannot be used against my system
+- This is a proprietary system/feature/technology
+  - Therefore, it is automagically protected from hackers
+
+** Examples
+:PROPERTIES:
+:CUSTOM_ID: examples-1
+:END:
+- User supported input will always be well-formed
+  - At worst, the program will produce garbage
+- My program has the whole machine for itself
+  - Resources I need will not be touched by anything else
+- No external factors will influence program execution
+  - Voltage, temperature, background radiation, illumination are not a
+    factor
+- Program execution will not leak any information
+  - Everything takes zero power and no time
+- System memory works perfectly well
+  - Whatever other programs write will not influence what I read
+
+* What about your product?
+:PROPERTIES:
+:CUSTOM_ID: what-about-your-product
+:END:
+- Have you ever assumed Evil Input won't reach your component?
+- Have you ever assumed your product will only be installed in a
+  protected location?
+- Have you ever assumed nobody will ever take your product apart?
+- Have you ever assumed whoever installs it will know how to configure
+  it securely?
+- Have you ever assumed ...
+
+* Assumptions everywhere
+:PROPERTIES:
+:CUSTOM_ID: assumptions-everywhere
+:END:
+** What to do
+:PROPERTIES:
+:CUSTOM_ID: what-to-do
+:END:
+*** Document
+:PROPERTIES:
+:CUSTOM_ID: document
+:END:
+- Write your assumptions down
+- Make the assumptions explicit
+- Documented assumptions become requirements
+- Requirements will be handled after the design phase
+
+*** Validate
+:PROPERTIES:
+:CUSTOM_ID: validate
+:END:
+- Review your list of assumptions
+  - independently as well
+- Does everything make sense?
+- Is everything accounted for?
+- If yes, then you are good to go and write some code
+
+** Hacker's perspective
+:PROPERTIES:
+:CUSTOM_ID: hackers-perspective
+:END:
+*** Identifying and exploiting bugs is nice
+:PROPERTIES:
+:CUSTOM_ID: identifying-and-exploiting-bugs-is-nice
+:END:
+- Testing pens for fun and profit
+
+- Consulting work aka telling people to do their work properly
+
+- Bug finding for them bounties
+
+- You get a CVE, you get a CVE, everyone gets a CVE!
+
+- It feels great!
+
+- ... but what about the impact of your work?
+
+*** Identifying and breaking assumptions is amazing!
+:PROPERTIES:
+:CUSTOM_ID: identifying-and-breaking-assumptions-is-amazing
+:END:
+- Apart from sub par work, most issues are caused by assumptions
+- Exploited a nice bug? Owned one product
+- Broke a nice assumption? Owned the whole planet
+  - Morris worm
+  - Kocher's power analysis work
+  - Spectre
+  - Rowhammer
+
+* Think proactive, not reactive
+:PROPERTIES:
+:CUSTOM_ID: think-proactive-not-reactive
+:END:
+- We already know assumptions cause big problems
+  - Why challenge small problems when you can tackle big issues?
+  - Why settle for small catch when you can go for big game?
+  - Why identify bugs when you can identify assumptions?
+- Identify assumptions proactively!
+- Challenge ideas, not the paper they are printed on
+- Challenge the way of working, not the final product
+- Challenge assumptions, not implementations
+
+* Hack the planet!
+:PROPERTIES:
+:CUSTOM_ID: hack-the-planet
+:END:
+[[file:img/hacktheplanet.jpg]]
+
+* ...and systematize your knowledge
+:PROPERTIES:
+:CUSTOM_ID: and-systematize-your-knowledge
+:END:
+Use a knowledge framework: - [[https://attack.mitre.org/][MITRE
+ATT&CK]] - [[https://www.securityknowledgeframework.org/][OWASP SKF]]
+
+* Exercise for today
+:PROPERTIES:
+:CUSTOM_ID: exercise-for-today
+:END:
+Go through the
+[[https://attack.mitre.org/resources/training/cti/][lecture material by
+MITRE ATT&CK]] and do the exercises.
