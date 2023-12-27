@@ -31,7 +31,8 @@ The course will cover the following topics:
 2. [[file:2-reverse-engineering.ipynb][Binary Reverse Engineering]] (8/2)
 3. [[file:8-bad-crypto.pptx][Bad use of cryptography]] (15/2)
 4. [[file:3-deserialization-attacks.ipynb][Deserialization Attacks]] (22/2)
-5. [[file:4-fuzzying.ipynb][Fuzzying: Binaries (AFL), Web (APIfuzzer), SQL (SQLmap), make your own fuzzer]] (29/2)
+5. [[file:4-fuzzying.ipynb][Fuzzying: Binaries (AFL), Web (APIfuzzer), SQL (SQLmap), make your
+   own fuzzer]] (29/2)
 6. [[file:5-symbolic-execution.ipynb][Symbolic execution: Angr, build your own engine]] (1/3)
 7. [[file:7-hw-hacking.ipynb][HW hacking]] (8/3)
 8. [[file:9-adversarial-ai.ipynb][Adversarial AI]] (15/3)
