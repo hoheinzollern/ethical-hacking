@@ -574,7 +574,7 @@ https://securitytxt.org/
 
 
 #+caption: image.png
-[[file:1-responsible-disclosure_files/image.png]]
+[[file:img/1-responsible-disclosure_files/image.png]]
 
 * [[https://cvth.nl/hhe.htm][Helpful Hackers]]
 

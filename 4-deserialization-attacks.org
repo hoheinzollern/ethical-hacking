@@ -205,7 +205,7 @@ More resources:
 
 - =ViewState= is server-side data that ASP.NET web applications store in
   serialized format on the client
-  [[file:4-deserialization-attacks_files/image.png]]
+  [[file:img/4-deserialization-attacks_files/image.png]]
 
 - Having access to the secret keys (it was the same for all MS Exchange
   installs) it was possible to craft a malicious =ViewState= that runs
@@ -228,7 +228,7 @@ Day Initiative]]
 :CUSTOM_ID: back-to-first-principles
 :END:
 #+caption: image.png
-[[file:4-deserialization-attacks_files/image.png]]
+[[file:img/4-deserialization-attacks_files/image.png]]
 
 * References
 :PROPERTIES:

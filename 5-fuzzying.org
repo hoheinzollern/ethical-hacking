@@ -121,7 +121,7 @@ Fuzzying is (almost) like that
 :CUSTOM_ID: the-fuzz-cycle
 :END:
 #+caption: image.png
-[[file:5-fuzzying_files/image.png]]
+[[file:img/5-fuzzying_files/image.png]]
 
 * Limitations of fuzzying
 :PROPERTIES:
@@ -222,28 +222,28 @@ Fuzzying is (almost) like that
   sentence
 
 #+caption: image.png
-[[file:5-fuzzying_files/image.png]]
+[[file:img/5-fuzzying_files/image.png]]
 
 * Coverage Guided Fuzzing Visualized
 :PROPERTIES:
 :CUSTOM_ID: coverage-guided-fuzzing-visualized
 :END:
 #+caption: image-2.png
-[[file:5-fuzzying_files/image-2.png]]
+[[file:img/5-fuzzying_files/image-2.png]]
 
 * Coverage Guided Fuzzing Visualized
 :PROPERTIES:
 :CUSTOM_ID: coverage-guided-fuzzing-visualized-1
 :END:
 #+caption: image.png
-[[file:5-fuzzying_files/image.png]]
+[[file:img/5-fuzzying_files/image.png]]
 
 * Feedback Fuzz Cycle
 :PROPERTIES:
 :CUSTOM_ID: feedback-fuzz-cycle
 :END:
 #+caption: image.png
-[[file:5-fuzzying_files/image.png]]
+[[file:img/5-fuzzying_files/image.png]]
 
 * Crash Amplification
 :PROPERTIES:

@@ -153,7 +153,7 @@ main:
 :CUSTOM_ID: enter-valgrindvex
 :END:
 #+caption: image.png
-[[file:6-symbolic-execution_files/image.png]]
+[[file:img/6-symbolic-execution_files/image.png]]
 
 * VEX
 :PROPERTIES:
@@ -268,7 +268,7 @@ idea: describe mathematically a piece of code and learn interesting
 properties instead of running it.
 
 If interested for an introduction, check this book:
-[[https://www.springer.com/gp/book/9783030051556][[[file:6-symbolic-execution_files/image.png]]]]
+[[https://www.springer.com/gp/book/9783030051556][[[file:img/6-symbolic-execution_files/image.png]]]]
 
 * Example: null-pointer analysis
 :PROPERTIES:
@@ -334,7 +334,7 @@ the code - fuzz the binary - run symbolic execution
 :PROPERTIES:
 :CUSTOM_ID: fuzzying
 :END:
-[[https://lcamtuf.coredump.cx/afl/][[[file:6-symbolic-execution_files/image.png]]]]
+[[https://lcamtuf.coredump.cx/afl/][[[file:img/6-symbolic-execution_files/image.png]]]]
 
 - American Fuzzy Lop is a /coverage based fuzzer/: it runs the program
   with different inputs to find failure states

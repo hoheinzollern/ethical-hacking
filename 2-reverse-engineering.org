@@ -43,28 +43,28 @@
 
 * What is Reverse Engineering?
 #+caption: image-2.png
-[[file:2-reverse-engineering_files/image-2.png]]-----------
+[[file:img/2-reverse-engineering_files/image-2.png]]-----------
 
 #+caption: image.png
-[[file:2-reverse-engineering_files/image.png]]
+[[file:img/2-reverse-engineering_files/image.png]]
 
 #+caption: image.png
-[[file:2-reverse-engineering_files/image.png]]
+[[file:img/2-reverse-engineering_files/image.png]]
 
 #+caption: image.png
-[[file:2-reverse-engineering_files/image.png]]
+[[file:img/2-reverse-engineering_files/image.png]]
 
 #+caption: Screenshot%20from%202022-02-09%2006-19-45.png
-[[file:2-reverse-engineering_files/Screenshot%20from%202022-02-09%2006-19-45.png]]
+[[file:img/2-reverse-engineering_files/Screenshot%20from%202022-02-09%2006-19-45.png]]
 
 #+caption: image-2.png
-[[file:2-reverse-engineering_files/image-2.png]]
+[[file:img/2-reverse-engineering_files/image-2.png]]
 
 * CPU (x86)
 
 
 #+caption: image.png
-[[file:2-reverse-engineering_files/image.png]]
+[[file:img/2-reverse-engineering_files/image.png]]
 
 - fetch-decode-execute cycle
 - [[http://www.jegerlehner.ch/intel/IntelCodeTable.pdf][instruction set
@@ -74,7 +74,7 @@
 
 
 #+caption: image.png
-[[file:2-reverse-engineering_files/image.png]]
+[[file:img/2-reverse-engineering_files/image.png]]
 
 ** Calling conventions, stack vs registers
 
@@ -91,7 +91,7 @@
 
 
 #+caption: image.png
-[[file:2-reverse-engineering_files/image.png]]
+[[file:img/2-reverse-engineering_files/image.png]]
 
 * Stack-based VMs
 

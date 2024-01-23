@@ -25,7 +25,7 @@ import numpy as np
 #+end_src
 
 #+caption: image.png
-[[file:3-breaking-rsa_files/image.png]]
+[[file:img/3-breaking-rsa_files/image.png]]
 
 * Generating random primes
 :PROPERTIES:
@@ -39,7 +39,7 @@ n = np.linspace(1,2048,100); plt.plot(n, 1/(3*n),'b'); plt.show(); print(1/(3*20
 #+end_src
 
 #+caption: png
-[[file:3-breaking-rsa_files/3-breaking-rsa_5_0.png]]
+[[file:img/3-breaking-rsa_files/3-breaking-rsa_5_0.png]]
 
 #+begin_example
 0.00016276041666666666
@@ -74,12 +74,12 @@ witnesses that \(N\) is composite.
 This tells us that if there is an element that is not a generator...
 
 #+caption: image.png
-[[file:3-breaking-rsa_files/image.png]]
+[[file:img/3-breaking-rsa_files/image.png]]
 
 ...then at least half the elements are not generators!
 
 #+caption: image.png
-[[file:3-breaking-rsa_files/image.png]]
+[[file:img/3-breaking-rsa_files/image.png]]
 
 (and thus witnesses that \(N\) is not prime for \(\mathbb Z_N^*\))
 
@@ -159,7 +159,7 @@ q = 1049634623153828642287459624645706307091741980002073981693865739601017047013
 #+end_example
 
 #+caption: image.png
-[[file:3-breaking-rsa_files/image.png]]
+[[file:img/3-breaking-rsa_files/image.png]]
 
 * RSA, finally!
 :PROPERTIES:
@@ -241,14 +241,14 @@ m = 20
 :CUSTOM_ID: attacks-on-rsa
 :END:
 #+caption: image.png
-[[file:3-breaking-rsa_files/image.png]]
+[[file:img/3-breaking-rsa_files/image.png]]
 
 * The RSA function is /completely deterministic/ \(\to\) not CPA-secure
 :PROPERTIES:
 :CUSTOM_ID: the-rsa-function-is-completely-deterministic-to-not-cpa-secure
 :END:
 #+caption: image.png
-[[file:3-breaking-rsa_files/image.png]]
+[[file:img/3-breaking-rsa_files/image.png]]
 
 * Encrypting short messages using small \(e\)
 :PROPERTIES:
@@ -329,7 +329,7 @@ r = 30215 s = 377
 :CUSTOM_ID: more-attacks-on-textbook-rsa
 :END:
 #+caption: image.png
-[[file:3-breaking-rsa_files/image.png]]
+[[file:img/3-breaking-rsa_files/image.png]]
 
 *** Encrypting a partially known message
 :PROPERTIES:
@@ -394,7 +394,7 @@ r = 30215 s = 377
 :END:
 - PKCS #1 v1.5 is still /not CCA-secure/ (Bleichenbacher Crypto'98)
 - RSA-OAEP uses a Feistel network:
-  [[file:3-breaking-rsa_files/image.png]]
+  [[file:img/3-breaking-rsa_files/image.png]]
 
 ** RSA-OAEP (cont)
 :PROPERTIES:
@@ -415,7 +415,7 @@ r = 30215 s = 377
 :CUSTOM_ID: rsa-signatures
 :END:
 #+caption: IMG_20170902_153801.jpg
-[[file:3-breaking-rsa_files/IMG_20170902_153801.jpg]]
+[[file:img/3-breaking-rsa_files/IMG_20170902_153801.jpg]]
 
 ** Plain RSA signatures
 :PROPERTIES:
@@ -442,7 +442,7 @@ r = 30215 s = 377
 :CUSTOM_ID: attacks-on-plain-rsa-signatures
 :END:
 #+caption: IMG_20190810_183623.jpg
-[[file:3-breaking-rsa_files/IMG_20190810_183623.jpg]]
+[[file:img/3-breaking-rsa_files/IMG_20190810_183623.jpg]]
 
 *** No-message attack
 :PROPERTIES:
@@ -493,7 +493,7 @@ r = 30215 s = 377
 :CUSTOM_ID: secure-multi-party-computation
 :END:
 #+caption: image.png
-[[file:3-breaking-rsa_files/image.png]]
+[[file:img/3-breaking-rsa_files/image.png]]
 
 *[[https://video.itu.dk/video/20232796/ivan-damgard-secure-multi-party-computation-1]]
 
@@ -597,4 +597,4 @@ sender is ignorant of which secret has been received"
 :CUSTOM_ID: thats-all-folks
 :END:
 #+caption: image.png
-[[file:3-breaking-rsa_files/image.png]]
+[[file:img/3-breaking-rsa_files/image.png]]
