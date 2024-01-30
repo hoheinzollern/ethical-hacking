@@ -10,6 +10,7 @@
 - [[https://dropbox.tech/security/protecting-security-researchers][DropBox: Protecting Security Researchers]]
 - [[https://www.justice.gov/criminal-ccips/page/file/983996/download][US Department of Justice: A Framework for a Vulnerability Disclosure Program]]
 - [[https://www.ceps.eu/ceps-publications/software-vulnerability-disclosure-europe-technology-policies-and-legal-challenges/][Software Vulnerability Disclosure in Europe]]
+- [[https://vbn.aau.dk/ws/portalfiles/portal/402917035/3_2020_8.pdf]["Hacking" - forbrydelse eller digitalt selvforsvar?]]
 
 ** Responsible disclosure platforms:
 
