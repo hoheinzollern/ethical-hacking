@@ -93,6 +93,8 @@
 #+caption: image.png
 [[file:img/2-reverse-engineering_files/image.png]]
 
+- tutorial: [[https://github.com/radareorg/radare2-book/tree/master/src/crackmes/ioli][ARM buffer overflow explitation]]
+
 * Stack-based VMs
 
 
@@ -113,10 +115,8 @@
 * Exercise session:
 
 
-- [[https://github.com/radareorg/radare2-book/raw/master/src/crackmes/ioli/IOLI-crackme.tar.gz][IOLI
-  crackmes]]
-- HackTheBox
-  [[https://app.hackthebox.com/tracks/Intro-to-Reversing][Reversing
-  track]] and
-  [[https://app.hackthebox.com/tracks/Intro-to-Binary-Exploitation][Exploitation
-  track]]
+- [[https://pwn.college/cse365-f2023/reverse-engineering][PWN college]]
+- [[https://github.com/radareorg/radare2-book/raw/master/src/crackmes/ioli/][IOLI  crackmes]]
+- HackTheBox (requires VIP subscription)
+  [[https://app.hackthebox.com/tracks/Intro-to-Reversing][Reversing track]] and
+  [[https://app.hackthebox.com/tracks/Intro-to-Binary-Exploitation][Exploitation track]]

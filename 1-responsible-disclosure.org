@@ -254,8 +254,6 @@ and there is no requirement that the victim incurs a loss.
   probability/eventuality/negligence
 - *Impunity*: Has Esben acted in self-defence or under consent?
 
-Work out the answers in groups.
-
 * Bug Bounty Programmes
 
 
@@ -345,7 +343,7 @@ submissions from the outside world, sometimes referred to as
 - *Fine print*: how to coordinate disclosure, consequences of
   compliance/non-compliance
 
-Example: [[https://hackerone.com/dropbox][Dropbox]]
+Example: [[https://bugcrowd.com/dropbox][Dropbox]]
 
 * Exercise
 
@@ -449,7 +447,7 @@ gain unauthorized access to [their] Services or systems...
 
 - [[https://dropbox.tech/security/protecting-security-researchers][Blog post]]
 
-- [[https://hackerone.com/dropbox][Bounty program]]
+- [[https://bugcrowd.com/dropbox][Bounty program]]
 
 * Don't end up like Finisterre
 
