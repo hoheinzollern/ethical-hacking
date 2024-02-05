@@ -1,4 +1,4 @@
-# Ethical Hacking 2023
+# Ethical Hacking 2024
 
 ## Lecture plan:
 1. [Legality of Hacking and Responsible Disclosure](1-responsible-disclosure.org) (30/1)
