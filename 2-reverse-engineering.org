@@ -102,9 +102,14 @@
 
 * Exercise session:
 
-
+CS: 
+For pwn.college, optionally do the introduction Dojo to get accustomed with starting the VSCode- and Desktop workspace. 
+With these workspaces you'll be ready to hack away without having to download Ghidra or setting up VMs.
 - [[https://pwn.college/cse365-f2023/reverse-engineering][PWN college]]
 - [[https://github.com/radareorg/radare2-book/raw/master/src/crackmes/ioli/][IOLI  crackmes]]
 - HackTheBox (requires VIP subscription)
   [[https://app.hackthebox.com/tracks/Intro-to-Reversing][Reversing track]] and
   [[https://app.hackthebox.com/tracks/Intro-to-Binary-Exploitation][Exploitation track]]
+
+SD: 
+[[https://omu.rce.so/lessons/asm-x86-64/introduction][Learning Assembly with OMU]]
