@@ -39,12 +39,19 @@
   https://arxiv.org/pdf/1412.6572.pdf
 - Intriguing properties of neural networks
   https://arxiv.org/pdf/1312.6199.pdf
+- Prompt Injection introduction: https://research.nccgroup.com/2022/12/05/exploring-prompt-injection-attacks/
 
-** Generating adversarial examples
+** Exercise: Generating adversarial examples & LLM Prompt Injection
 :PROPERTIES:
 :CUSTOM_ID: generating-adversarial-examples
 :END:
-- Use cleverhans: https://github.com/cleverhans-lab/cleverhans
+- Use cleverhans: https://github.com/cleverhans-lab/cleverhans. (Python/ML)
+  Try out the MNIST tutorial with torch! Afterwards, experiment with different image classification datasets, 
+  different models, or different attacks (other than fast gradient sign method).
+  How does the epsilon value in FGSM affect the adversarial process?
+  Setup tip: Do PIP install for torch, torchvision and cleverhans if buggy.  
+- Try out LLM prompt injection attacks with: https://gandalf.lakera.ai/ (Web)
+  (less techical than above, how many levels can you solve? What kind of prompts worked?)
 
 *** Target nets:
 :PROPERTIES:
@@ -53,6 +60,14 @@
 - Cubs: https://github.com/nicolalandro/ntsnet-cub200
 - Shoes: https://github.com/rfox12-edu/image_classifier_pytorch_shoes
 - Flowers: https://github.com/jclh/image-classifier-PyTorch
+
+*** Dataset ressources:
+:PROPERTIES:
+:CUSTOM_ID: dataset-ressource
+:END:
+- https://www.kaggle.com/datasets?tags=13302-Classification
+- https://paperswithcode.com/datasets?task=image-classification
+
 
 ** GANs resources
 :PROPERTIES:
