@@ -1,11 +1,5 @@
 * Adversarial AI
-:PROPERTIES:
-:CUSTOM_ID: adversarial-ai
-:END:
 ** #NotHotDog
-:PROPERTIES:
-:CUSTOM_ID: nothotdog
-:END:
 - https://blog.paperspace.com/ml_behind_nothotdog_app/
 - https://www.digitaltribune.com/not-hotdog/
 - https://twitter.com/hashtag/NotHotdog
@@ -14,20 +8,11 @@
 [[file:img/nothotdog.jpg]]
 
 ** Slides
-:PROPERTIES:
-:CUSTOM_ID: slides
-:END:
 - [[file:talks/bsi-auditable-ai.pdf][BSI talk]]
 - [[file:talks/stanford-adversarial-samples.pdf][Stanford talk]]
 
 ** Literature
-:PROPERTIES:
-:CUSTOM_ID: literature
-:END:
 *** Blog posts:
-:PROPERTIES:
-:CUSTOM_ID: blog-posts
-:END:
 - Fast gradient sign method: https://jaketae.github.io/study/fgsm/
 - Towards a general theory of "adversarial examples," the bizarre,
   hallucinatory motes in machine learning's all-seeing eye
@@ -42,9 +27,6 @@
 - Prompt Injection introduction: https://research.nccgroup.com/2022/12/05/exploring-prompt-injection-attacks/
 
 ** Exercise: Generating adversarial examples & LLM Prompt Injection
-:PROPERTIES:
-:CUSTOM_ID: generating-adversarial-examples
-:END:
 - Use cleverhans: https://github.com/cleverhans-lab/cleverhans. (Python/ML)
   Try out the MNIST tutorial with torch! Afterwards, experiment with different image classification datasets, 
   different models, or different attacks (other than fast gradient sign method).
@@ -54,32 +36,24 @@
   (less techical than above, how many levels can you solve? What kind of prompts worked?)
 
 *** Target nets:
-:PROPERTIES:
-:CUSTOM_ID: target-nets
-:END:
 - Cubs: https://github.com/nicolalandro/ntsnet-cub200
 - Shoes: https://github.com/rfox12-edu/image_classifier_pytorch_shoes
 - Flowers: https://github.com/jclh/image-classifier-PyTorch
 
 *** Dataset ressources:
-:PROPERTIES:
-:CUSTOM_ID: dataset-ressource
-:END:
 - https://www.kaggle.com/datasets?tags=13302-Classification
 - https://paperswithcode.com/datasets?task=image-classification
 
 
 ** GANs resources
-:PROPERTIES:
-:CUSTOM_ID: gans-resources
-:END:
 https://machinelearningmastery.com/resources-for-getting-started-with-generative-adversarial-networks/
 
 * More interesting links
-:PROPERTIES:
-:CUSTOM_ID: more-interesting-links
-:END:
 - https://analyticsindiamag.com/an-idiots-guide-to-adversarial-attacks-in-machine-learning/
 - https://www.belfercenter.org/publication/AttackingAI
 - https://openai.com/blog/adversarial-example-research/
 - https://machinelearningmastery.com/data-leakage-machine-learning/
+
+* Attacking LLMs tutorial
+
+https://gandalf.lakera.ai/
