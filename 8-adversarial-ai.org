@@ -53,6 +53,7 @@ https://machinelearningmastery.com/resources-for-getting-started-with-generative
 - https://www.belfercenter.org/publication/AttackingAI
 - https://openai.com/blog/adversarial-example-research/
 - https://machinelearningmastery.com/data-leakage-machine-learning/
+- https://medium.com/the-generator/jailbreaking-large-language-models-if-you-torture-the-model-long-enough-it-will-confess-55e910ee2c3c
 
 * Attacking LLMs tutorial
 
