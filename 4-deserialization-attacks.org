@@ -64,19 +64,22 @@ it in a database
 - [[https://www.owasp.org/index.php/Deserialization_Cheat_Sheet][Deserialization cheatsheet]]
 
 * Exercise: OWASP WebGoat
-
 - Run the following docker image:
   https://hub.docker.com/r/webgoat/goatandwolf
-
 - Go through A08 - software and data integrity
+
 
 ** Exercise: do Natas 26
 
 http://natas26.natas.labs.overthewire.org/
 
+If Web security is very new, consider starting at Natas0. To get a hold of the basics. 
+
+
 #+begin_example
+(Experienced/advanced)
 username = natas26
-password = oGgWAJ7zcGT28vYazGo4rkhOPDhBu34T
+password = 8A506rfIAXbKKk68yJeuTuRq4UfcK70k
 #+end_example
 
 ** Remote Code Execution with destructors
