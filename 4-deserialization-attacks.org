@@ -64,6 +64,11 @@ it in a database
 - [[https://www.owasp.org/index.php/Deserialization_Cheat_Sheet][Deserialization cheatsheet]]
 
 * Exercise: OWASP WebGoat
+
+*note* WebGoat seems to be broken, see [[https://github.com/WebGoat/WebGoat/blob/main/src/main/java/org/dummy/insecure/framework/VulnerableTaskHolder.java#L12][VulnerableTaskHolder.java]]
+
+- highly recommend getting/using Kali-Linux (consider getting it as a Virtual Machine(VM)).
+  as it holds useful tools, and keeps the work in one environment.
 - Run the following docker image:
   https://hub.docker.com/r/webgoat/goatandwolf
 - Go through A08 - software and data integrity
@@ -172,7 +177,7 @@ More resources:
 ysoserial.exe -p ViewState -g TextFormattingRunProperties -c "echo OOOPS!!! > c:/Vuln_Server.txt" --validationalg="SHA1" --validationkey="CB2721ABDAF8E9DC516D621D8B8BF13A2C9E8689A25303BF" --generator="B97B4E27" --viewstateuserkey="05ae4b41-51e1-4c3a-9241-6b87b169d663" --isdebug –islegacy
 #+end_example
 
-[[attachment:image.png]]
+[[file:img/4-deserialization-attacks_files/exchange.png]]
 
 Source: [[https://www.zerodayinitiative.com/blog/2020/2/24/cve-2020-0688-remote-code-execution-on-microsoft-exchange-server-through-fixed-cryptographic-keys][Zero Day Initiative]]
 
