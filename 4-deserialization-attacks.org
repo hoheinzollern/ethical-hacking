@@ -73,7 +73,7 @@ it in a database
 
 http://natas26.natas.labs.overthewire.org/
 
-If Web security is very new, consider starting at Natas0. To get a hold of the basics. 
+If Web security is very new, consider starting at Natas0 and work your way up. Try to get a hold of the basics. 
 
 
 #+begin_example
