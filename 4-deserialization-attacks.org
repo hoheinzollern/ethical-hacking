@@ -72,7 +72,7 @@ it in a database
 ** Exercise: do Natas 26
 
 http://natas26.natas.labs.overthewire.org/
-
+- Hint: read the introduction to Natas, you will need some of this info. 
 If Web security is very new, consider starting at Natas0 and work your way up. Try to get a hold of the basics. 
 
 
