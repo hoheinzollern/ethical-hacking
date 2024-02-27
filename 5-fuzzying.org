@@ -28,15 +28,6 @@
 - [[https://www.microsoft.com/en-us/research/publication/restler-stateful-rest-api-fuzzing/][Restler]]
 - [[https://github.com/KissPeter/APIFuzzer][APIFuzzer]]
 
-Today's plan - white gray black box - dumb/smart fuzzers - what makes a
-good target? e.g. parsers - hard to find constants, but mitigated by
-existence of lightweight symbolic analysis - completely random,
-generative/grammar-based, mutation-based - tension between generating
-valid input vs finding bugs - REST API fuzzers - dangers of fuzzying
-
-Exercise: - use radamsa for test case generation - find a binary to fuzz
-(e.g. gunzip) with radamsa - how to setup AFL
-
 * Plan for this lecture
 - What is fuzzying
 - Build your own fuzzer
