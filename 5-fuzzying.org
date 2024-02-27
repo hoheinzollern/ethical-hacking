@@ -94,14 +94,14 @@ Fuzzying is (almost) like that
 - Can be impossible to scale as the program can only have one instance
 - Program startup times can be long (seconds to open up Word)
 
-* AFL
+* [[https://github.com/AFLplusplus/AFLplusplus][AFL++]]
 - The gold standard
   - Looks to be being replaced slowly by libfuzzer in popularity
 - Coverage guided
 - Relies on having source in standard configuration
 - Can use QEMU for coverage
 
-* libfuzzer
+* [[https://llvm.org/docs/LibFuzzer.html][libfuzzer]]
 - Designed to be baked into your target application
 - Part of LLVM, easily used when building a target with clang
 - Coverage guided
@@ -135,8 +135,9 @@ Fuzzying is (almost) like that
 [[file:img/5-fuzzying_files/image.png]]
 
 * Feedback Fuzz Cycle
-[[file:img/5-fuzzying_files/image.png]]
 
+
+[[file:img/5-fuzzying_files/image.png]]
 * Crash Amplification
 - Increase program sensitivity to malformed input
   - ASAN / PageHeap / Electric Fence
