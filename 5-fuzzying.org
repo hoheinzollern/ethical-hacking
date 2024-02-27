@@ -134,10 +134,7 @@ Fuzzying is (almost) like that
 #+caption: image.png
 [[file:img/5-fuzzying_files/image.png]]
 
-* Feedback Fuzz Cycle
 
-
-[[file:img/5-fuzzying_files/image.png]]
 * Crash Amplification
 - Increase program sensitivity to malformed input
   - ASAN / PageHeap / Electric Fence
@@ -152,10 +149,6 @@ Inspired from [[https://h0mbre.github.io/Fuzzing-Like-A-Caveman/#][fuzzying like
 
 * Scheleton
 #+begin_src python
-import os, sys, random
-from pexpect import run
-from pipes import quote
-
 def get_bytes(filename):
     f = open(filename, "rb").read()
     return bytearray(f)
@@ -247,8 +240,6 @@ def magic(data):
 def mutate(data):
     f = random.choice([bit_flip, magic])
     return f(data)
-
-fuzz('input.jpg')
 #+end_src
 
 - Input: [[file:input.jpg]]
@@ -257,8 +248,6 @@ fuzz('input.jpg')
 
 * Triaging
 #+begin_src python
-import os
-
 def get_files():
     return os.listdir("crashes/")
 
@@ -315,8 +304,6 @@ def triage_files(files):
             f = open(log_name,"w+")
             f.write(original_output)
             f.close()
-files = get_files()
-triage_files(files)
 #+end_src
 
 * Trying AFL
