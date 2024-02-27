@@ -1,65 +1,30 @@
 * Fuzzying
-:PROPERTIES:
-:CUSTOM_ID: fuzzying
-:END:
-** Alessandro Bruni
-:PROPERTIES:
-:CUSTOM_ID: alessandro-bruni
-:END:
-** Ethical Hacking course, March 1st, 2023
-:PROPERTIES:
-:CUSTOM_ID: ethical-hacking-course-march-1st-2023
-:END:
+
 * Material on fuzzing
-:PROPERTIES:
-:CUSTOM_ID: material-on-fuzzing
-:END:
 ** Papers
-:PROPERTIES:
-:CUSTOM_ID: papers
-:END:
-- [[https://dl.acm.org/doi/pdf/10.1145/96267.96279][An empirical study
-  of the reliability of UNIX utilities]]
-- [[https://arxiv.org/pdf/1812.00140.pdf][The Art, Science, and
-  Engineering of Fuzzing: A Survey]]
+- [[https://dl.acm.org/doi/pdf/10.1145/96267.96279][An empirical study of the reliability of UNIX utilities]]
+- [[https://arxiv.org/pdf/1812.00140.pdf][The Art, Science, and Engineering of Fuzzing: A Survey]]
+- [[https://www.usenix.org/system/files/woot20-paper-fioraldi.pdf][AFL++: Combining Incremental Steps of Fuzzing Research]]
+- [[https://arxiv.org/abs/1908.01262][A systematic review of fuzzing based on machine learning techniques]]
 
 ** Practical
-:PROPERTIES:
-:CUSTOM_ID: practical
-:END:
-- [[https://h0mbre.github.io/Fuzzing-Like-A-Caveman/][Fuzzing Like a
-  Caveman, A series on the practical techniques to writing a fuzzer in
-  C++]]
+- [[https://h0mbre.github.io/Fuzzing-Like-A-Caveman/][Fuzzing Like a Caveman, A series on the practical techniques to writing a fuzzer in C++]]
+- [[https://owasp.org/www-community/Fuzzing][OWASP fuzzing guide]]
 
 ** Practice
-:PROPERTIES:
-:CUSTOM_ID: practice
-:END:
-- [[https://github.com/fuzzstati0n/fuzzgoat][Fuzzgoat, An application to
-  test fuzzers]]
+- [[https://github.com/fuzzstati0n/fuzzgoat][Fuzzgoat, An application to test fuzzers]]
 
 ** Tools and fuzzers
-:PROPERTIES:
-:CUSTOM_ID: tools-and-fuzzers
-:END:
 - [[https://github.com/google/AFL][AFL (mutation, coverage-guided)]]
 - [[https://aflplus.plus/][AFL++ (more advanced than above, a fork)]]
-- [[https://llvm.org/docs/LibFuzzer.html][LibFuzzer (advanced,
-  llvm-based)]]
-- [[https://gitlab.com/akihe/radamsa][Radamsa (mutational, test-case
-  generator, prototyping)]]
+- [[https://llvm.org/docs/LibFuzzer.html][LibFuzzer (advanced, llvm-based)]]
+- [[https://gitlab.com/akihe/radamsa][Radamsa (mutational, test-case generator, prototyping)]]
 - [[https://github.com/nccgroup/fuzzowski][Fuzzowski (Network)]]
 
 ** Advanced
-:PROPERTIES:
-:CUSTOM_ID: advanced
-:END:
 - [[https://sites.cs.ucsb.edu/~vigna/publications/2016_NDSS_Driller.pdf][Driller]]
 
 ** Web fuzzing
-:PROPERTIES:
-:CUSTOM_ID: web-fuzzing
-:END:
 - [[https://www.microsoft.com/en-us/research/publication/restler-stateful-rest-api-fuzzing/][Restler]]
 - [[https://github.com/KissPeter/APIFuzzer][APIFuzzer]]
 
@@ -72,28 +37,12 @@ valid input vs finding bugs - REST API fuzzers - dangers of fuzzying
 Exercise: - use radamsa for test case generation - find a binary to fuzz
 (e.g. gunzip) with radamsa - how to setup AFL
 
-* Housekeeping
-:PROPERTIES:
-:CUSTOM_ID: housekeeping
-:END:
-For next week: - Form groups (2-3 people) and think of a project, look
-at the relevant disclosure policy, briefly present in class your target
-
-Once we are done with exploitation: - Assignment 2
-
 * Plan for this lecture
-:PROPERTIES:
-:CUSTOM_ID: plan-for-this-lecture
-:END:
 - What is fuzzying
 - Build your own fuzzer
 - American Fuzzy Lop (AFL)
 
 * Intro: What is fuzzying?
-:PROPERTIES:
-:CUSTOM_ID: intro-what-is-fuzzying
-:END:
-Slides courtesy of Brandon Faulk
 
 QA Engineer walks into a bar. Orders a beer. Orders 0 beers. Orders
 999999999 beers. Orders a lizard. Orders -1 beers. Orders a sfdeljknesv.
@@ -101,9 +50,6 @@ QA Engineer walks into a bar. Orders a beer. Orders 0 beers. Orders
 Fuzzying is (almost) like that
 
 * Fuzzying
-:PROPERTIES:
-:CUSTOM_ID: fuzzying-1
-:END:
 - Often used for file formats or networking protocols
 - Easy to set up
 - Almost no compute requirements for simple programs
@@ -117,16 +63,9 @@ Fuzzying is (almost) like that
   - Hangs
 
 * The fuzz cycle
-:PROPERTIES:
-:CUSTOM_ID: the-fuzz-cycle
-:END:
-#+caption: image.png
 [[file:img/5-fuzzying_files/image.png]]
 
 * Limitations of fuzzying
-:PROPERTIES:
-:CUSTOM_ID: limitations-of-fuzzying
-:END:
 - Generating all valid inputs is nearly impossible
 - Custom protocol extensions hard to know about without reversing
 - Non-crashing bugs typically not found
@@ -140,10 +79,6 @@ Fuzzying is (almost) like that
 - Most off the shelf tooling requires source
 
 * Harnessing
-:PROPERTIES:
-:CUSTOM_ID: harnessing
-:END:
-
 - The tooling used to observe program behavior
   - Debugger watching for crashes
   - Code coverage instrumentation by a compiler
@@ -156,15 +91,9 @@ Fuzzying is (almost) like that
   - Information leakage
 
 * Examples
-:PROPERTIES:
-:CUSTOM_ID: examples
-:END:
 (off-the-shelf fuzzers)
 
 * Just invoking the program
-:PROPERTIES:
-:CUSTOM_ID: just-invoking-the-program
-:END:
 - Usually the right place to start
 - Write some tool that generates a mutated file
 - Run the program to parse the file
@@ -175,10 +104,6 @@ Fuzzying is (almost) like that
 - Program startup times can be long (seconds to open up Word)
 
 * AFL
-:PROPERTIES:
-:CUSTOM_ID: afl
-:END:
-
 - The gold standard
   - Looks to be being replaced slowly by libfuzzer in popularity
 - Coverage guided
@@ -186,10 +111,6 @@ Fuzzying is (almost) like that
 - Can use QEMU for coverage
 
 * libfuzzer
-:PROPERTIES:
-:CUSTOM_ID: libfuzzer
-:END:
-
 - Designed to be baked into your target application
 - Part of LLVM, easily used when building a target with clang
 - Coverage guided
@@ -200,13 +121,8 @@ Fuzzying is (almost) like that
   - Need to have some well formed inputs to start with
 
 * Architectural Improvements to Fuzzing
-:PROPERTIES:
-:CUSTOM_ID: architectural-improvements-to-fuzzing
-:END:
+
 * Coverage Guided fuzzying
-:PROPERTIES:
-:CUSTOM_ID: coverage-guided-fuzzying
-:END:
 
 - Gather which code has been hit based on an input
 - Input saved when a new unique codepath is observed
@@ -215,41 +131,22 @@ Fuzzying is (almost) like that
 - Can ultimately turn exponential complexity into linear complexity
 
 * Coverage Guided Fuzzing Example
-:PROPERTIES:
-:CUSTOM_ID: coverage-guided-fuzzing-example
-:END:
 - Write a program to remove all occurrences of the word "the" in a
   sentence
 
-#+caption: image.png
 [[file:img/5-fuzzying_files/image.png]]
 
 * Coverage Guided Fuzzing Visualized
-:PROPERTIES:
-:CUSTOM_ID: coverage-guided-fuzzing-visualized
-:END:
-#+caption: image-2.png
 [[file:img/5-fuzzying_files/image-2.png]]
 
 * Coverage Guided Fuzzing Visualized
-:PROPERTIES:
-:CUSTOM_ID: coverage-guided-fuzzing-visualized-1
-:END:
 #+caption: image.png
 [[file:img/5-fuzzying_files/image.png]]
 
 * Feedback Fuzz Cycle
-:PROPERTIES:
-:CUSTOM_ID: feedback-fuzz-cycle
-:END:
-#+caption: image.png
 [[file:img/5-fuzzying_files/image.png]]
 
 * Crash Amplification
-:PROPERTIES:
-:CUSTOM_ID: crash-amplification
-:END:
-
 - Increase program sensitivity to malformed input
   - ASAN / PageHeap / Electric Fence
 - Heatmaps direct fuzzying to inputs that generate more crashes
@@ -259,17 +156,9 @@ Fuzzying is (almost) like that
   - Some incorrect memory access does not result in crashes
 
 * Roll your own fuzzer
-:PROPERTIES:
-:CUSTOM_ID: roll-your-own-fuzzer
-:END:
-Inspired from
-[[https://h0mbre.github.io/Fuzzing-Like-A-Caveman/#][fuzzying like a
-caveman]]
+Inspired from [[https://h0mbre.github.io/Fuzzing-Like-A-Caveman/#][fuzzying like a caveman]]
 
 * Scheleton
-:PROPERTIES:
-:CUSTOM_ID: scheleton
-:END:
 #+begin_src python
 import os, sys, random
 from pexpect import run
@@ -304,15 +193,7 @@ def fuzz(filename):
         exif(counter,mutated)
 #+end_src
 
-#+begin_example
-/tmp/ipykernel_82691/1846736264.py:3: DeprecationWarning: 'pipes' is deprecated and slated for removal in Python 3.13
-  from pipes import quote
-#+end_example
-
 * Mutation
-:PROPERTIES:
-:CUSTOM_ID: mutation
-:END:
 #+begin_src python
 def bit_flip(data):
     num_of_flips = int((len(data) - 4) * .01)
@@ -324,9 +205,6 @@ def bit_flip(data):
 #+end_src
 
 * Gynvael's Magic Numbers
-:PROPERTIES:
-:CUSTOM_ID: gynvaels-magic-numbers
-:END:
 - Gynvael Coldwind 'Basics of fuzzing' enumerates several 'magic
   numbers' that typically produce errors
 - These numbers relate to data type sizes and arithmetic-induced errors
@@ -356,9 +234,6 @@ def bit_flip(data):
   change four bytes
 
 * Magic number mutation
-:PROPERTIES:
-:CUSTOM_ID: magic-number-mutation
-:END:
 #+begin_src python
 def magic(data):
 
@@ -376,9 +251,6 @@ def magic(data):
 #+end_src
 
 * Mutation - putting it together
-:PROPERTIES:
-:CUSTOM_ID: mutation---putting-it-together
-:END:
 #+begin_src python
 def mutate(data):
     f = random.choice([bit_flip, magic])
@@ -387,93 +259,11 @@ def mutate(data):
 fuzz('input.jpg')
 #+end_src
 
-#+begin_example
-7200
-
-
----------------------------------------------------------------------------
-
-KeyboardInterrupt                         Traceback (most recent call last)
-
-Cell In[5], line 5
-      2     f = random.choice([bit_flip, magic])
-      3     return f(data)
-----> 5 fuzz('input.jpg')
-
-
-Cell In[1], line 31, in fuzz(filename)
-     29 mutated = mutate(data)
-     30 create_new(mutated)
----> 31 exif(counter,mutated)
-
-
-Cell In[1], line 18, in exif(counter, data)
-     16 def exif(counter,data):
-     17     command = "./exif mutated.jpg -verbose"
----> 18     out, returncode = run(command, withexitstatus=1)
-     19     if b"ERROR" in out:
-     20         f = open("crashes/crash.{}.jpg".format(str(counter)), "ab+")
-
-
-File /usr/lib/python3.11/site-packages/pexpect/run.py:99, in run(command, timeout, withexitstatus, events, extra_args, logfile, cwd, env, **kwargs)
-     96     child = spawn(command, maxread=2000, logfile=logfile, cwd=cwd, env=env,
-     97                     **kwargs)
-     98 else:
----> 99     child = spawn(command, timeout=timeout, maxread=2000, logfile=logfile,
-    100             cwd=cwd, env=env, **kwargs)
-    101 if isinstance(events, list):
-    102     patterns= [x for x,y in events]
-
-
-File /usr/lib/python3.11/site-packages/pexpect/pty_spawn.py:205, in spawn.__init__(self, command, args, timeout, maxread, searchwindowsize, logfile, cwd, env, ignore_sighup, echo, preexec_fn, encoding, codec_errors, dimensions, use_poll)
-    203     self.name = '<pexpect factory incomplete>'
-    204 else:
---> 205     self._spawn(command, args, preexec_fn, dimensions)
-    206 self.use_poll = use_poll
-
-
-File /usr/lib/python3.11/site-packages/pexpect/pty_spawn.py:303, in spawn._spawn(self, command, args, preexec_fn, dimensions)
-    298 if self.encoding is not None:
-    299     # Encode command line using the specified encoding
-    300     self.args = [a if isinstance(a, bytes) else a.encode(self.encoding)
-    301                  for a in self.args]
---> 303 self.ptyproc = self._spawnpty(self.args, env=self.env,
-    304                              cwd=self.cwd, **kwargs)
-    306 self.pid = self.ptyproc.pid
-    307 self.child_fd = self.ptyproc.fd
-
-
-File /usr/lib/python3.11/site-packages/pexpect/pty_spawn.py:315, in spawn._spawnpty(self, args, **kwargs)
-    313 def _spawnpty(self, args, **kwargs):
-    314     '''Spawn a pty and return an instance of PtyProcess.'''
---> 315     return ptyprocess.PtyProcess.spawn(args, **kwargs)
-
-
-File /usr/lib/python3.11/site-packages/ptyprocess/ptyprocess.py:309, in PtyProcess.spawn(cls, argv, cwd, env, echo, preexec_fn, dimensions)
-    306 # [issue #119] 2. After forking, the parent closes the writing end
-    307 # of the pipe and reads from the reading end.
-    308 os.close(exec_err_pipe_write)
---> 309 exec_err_data = os.read(exec_err_pipe_read, 4096)
-    310 os.close(exec_err_pipe_read)
-    312 # [issue #119] 6. The parent reads eof (a zero-length read) if the
-    313 # child successfully performed exec, since close-on-exec made
-    314 # successful exec close the writing end of the pipe. Or, if exec
-    315 # failed, the parent reads the error code and can proceed
-    316 # accordingly. Either way, the parent blocks until the child calls
-    317 # exec.
-
-
-KeyboardInterrupt: 
-#+end_example
-
 - Input: [[file:input.jpg]]
 - Target: https://github.com/mkttanabe/exif
 - Compile with ASAN: =-fsanitize=address -ggdb=
 
 * Triaging
-:PROPERTIES:
-:CUSTOM_ID: triaging
-:END:
 #+begin_src python
 import os
 
@@ -537,55 +327,14 @@ files = get_files()
 triage_files(files)
 #+end_src
 
-#+begin_example
-['crash.6.jpg', 'crash.11.jpg', 'crash.27.jpg', 'crash.31.jpg', 'crash.105.jpg', 'crash.114.jpg', 'crash.126.jpg', 'crash.131.jpg', 'crash.140.jpg', 'crash.163.jpg', 'crash.195.jpg', 'crash.196.jpg', 'crash.198.jpg', 'crash.207.jpg', 'crash.223.jpg', 'crash.260.jpg', 'crash.268.jpg', 'crash.283.jpg', 'crash.288.jpg', 'crash.291.jpg', 'crash.296.jpg', 'crash.316.jpg', 'crash.327.jpg', 'crash.329.jpg', 'crash.330.jpg', 'crash.339.jpg', 'crash.348.jpg', 'crash.361.jpg', 'crash.367.jpg', 'crash.381.jpg', 'crash.386.jpg', 'crash.390.jpg', 'crash.402.jpg', 'crash.404.jpg', 'crash.435.jpg', 'crash.437.jpg', 'crash.447.jpg', 'crash.449.jpg', 'crash.452.jpg', 'crash.458.jpg', 'crash.499.jpg', 'crash.506.jpg', 'crash.508.jpg', 'crash.536.jpg', 'crash.542.jpg', 'crash.551.jpg', 'crash.563.jpg', 'crash.582.jpg', 'crash.585.jpg', 'crash.590.jpg', 'crash.596.jpg', 'crash.608.jpg', 'crash.615.jpg', 'crash.626.jpg', 'crash.645.jpg', 'crash.656.jpg', 'crash.677.jpg', 'crash.688.jpg', 'crash.689.jpg', 'crash.700.jpg', 'crash.701.jpg', 'crash.709.jpg', 'crash.715.jpg', 'crash.733.jpg', 'crash.737.jpg', 'crash.741.jpg', 'crash.743.jpg', 'crash.781.jpg', 'crash.785.jpg', 'crash.793.jpg', 'crash.828.jpg', 'crash.829.jpg', 'crash.849.jpg', 'crash.858.jpg', 'crash.867.jpg', 'crash.876.jpg', 'crash.891.jpg', 'crash.909.jpg', 'crash.917.jpg', 'crash.932.jpg', 'crash.935.jpg', 'crash.945.jpg', 'crash.951.jpg', 'crash.954.jpg', 'crash.968.jpg', 'crash.970.jpg', 'crash.992.jpg', 'crash.1038.jpg', 'crash.1055.jpg', 'crash.1059.jpg', 'crash.1060.jpg', 'crash.1100.jpg', 'crash.1120.jpg', 'crash.1121.jpg', 'crash.1126.jpg', 'crash.1134.jpg', 'crash.1148.jpg', 'crash.1150.jpg', 'crash.1153.jpg', 'crash.1166.jpg', 'crash.1167.jpg', 'crash.1181.jpg', 'crash.1186.jpg', 'crash.1188.jpg', 'crash.1195.jpg', 'crash.1200.jpg', 'crash.1202.jpg', 'crash.1211.jpg', 'crash.1221.jpg', 'crash.1230.jpg', 'crash.1231.jpg', 'crash.1273.jpg', 'crash.1309.jpg', 'crash.1312.jpg', 'crash.1331.jpg', 'crash.1337.jpg', 'crash.1338.jpg', 'crash.1355.jpg', 'crash.1360.jpg', 'crash.1363.jpg', 'crash.1374.jpg', 'crash.1385.jpg', 'crash.1407.jpg', 'crash.1411.jpg', 'crash.1413.jpg', 'crash.1421.jpg', 'crash.1426.jpg', 'crash.1434.jpg', 'crash.1458.jpg', 'crash.1460.jpg', 'crash.1482.jpg', 'crash.1487.jpg', 'crash.1490.jpg', 'crash.1491.jpg', 'crash.1514.jpg', 'crash.1518.jpg', 'crash.1550.jpg', 'crash.1551.jpg', 'crash.1561.jpg', 'crash.1568.jpg', 'crash.1572.jpg', 'crash.1578.jpg', 'crash.1590.jpg', 'crash.1596.jpg', 'crash.1598.jpg', 'crash.1601.jpg', 'crash.1610.jpg', 'crash.1631.jpg', 'crash.1654.jpg', 'crash.1661.jpg', 'crash.1662.jpg', 'crash.1697.jpg', 'crash.1716.jpg', 'crash.1719.jpg', 'crash.1725.jpg', 'crash.1747.jpg', 'crash.1766.jpg', 'crash.1772.jpg', 'crash.1790.jpg', 'crash.1797.jpg', 'crash.1816.jpg', 'crash.1818.jpg', 'crash.1830.jpg', 'crash.1835.jpg', 'crash.1842.jpg', 'crash.1846.jpg', 'crash.1849.jpg', 'crash.1884.jpg', 'crash.1916.jpg', 'crash.1923.jpg', 'crash.1924.jpg', 'crash.1925.jpg', 'crash.1929.jpg', 'crash.1931.jpg', 'crash.1944.jpg', 'crash.1982.jpg', 'crash.1996.jpg', 'crash.2001.jpg', 'crash.2011.jpg', 'crash.2031.jpg', 'crash.2033.jpg', 'crash.2034.jpg', 'crash.2042.jpg', 'crash.2043.jpg', 'crash.2054.jpg', 'crash.2062.jpg', 'crash.2074.jpg', 'crash.2095.jpg', 'crash.2102.jpg', 'crash.2113.jpg', 'crash.2114.jpg', 'crash.2121.jpg', 'crash.2138.jpg', 'crash.2153.jpg', 'crash.2164.jpg', 'crash.2174.jpg', 'crash.2219.jpg', 'crash.2231.jpg', 'crash.2242.jpg', 'crash.2246.jpg', 'crash.2253.jpg', 'crash.2267.jpg', 'crash.2269.jpg', 'crash.2276.jpg', 'crash.2285.jpg', 'crash.2290.jpg', 'crash.2326.jpg', 'crash.2331.jpg', 'crash.2340.jpg', 'crash.2342.jpg', 'crash.2345.jpg', 'crash.2355.jpg', 'crash.2357.jpg', 'crash.2360.jpg', 'crash.2361.jpg', 'crash.2371.jpg', 'crash.2376.jpg', 'crash.2394.jpg', 'crash.2407.jpg', 'crash.2414.jpg', 'crash.2418.jpg', 'crash.2420.jpg', 'crash.2432.jpg', 'crash.2435.jpg', 'crash.2445.jpg', 'crash.2453.jpg', 'crash.2472.jpg', 'crash.2476.jpg', 'crash.2479.jpg', 'crash.2483.jpg', 'crash.2485.jpg', 'crash.2511.jpg', 'crash.2516.jpg', 'crash.2519.jpg', 'crash.2528.jpg', 'crash.2532.jpg', 'crash.2545.jpg', 'crash.2546.jpg', 'crash.2559.jpg', 'crash.2584.jpg', 'crash.2601.jpg', 'crash.2623.jpg', 'crash.2639.jpg', 'crash.2654.jpg', 'crash.2658.jpg', 'crash.2670.jpg', 'crash.2689.jpg', 'crash.2699.jpg', 'crash.2713.jpg', 'crash.2715.jpg', 'crash.2728.jpg', 'crash.2730.jpg', 'crash.2735.jpg', 'crash.2754.jpg', 'crash.2755.jpg', 'crash.2761.jpg', 'crash.2793.jpg', 'crash.2803.jpg', 'crash.2811.jpg', 'crash.2829.jpg', 'crash.2846.jpg', 'crash.2848.jpg', 'crash.2865.jpg', 'crash.2867.jpg', 'crash.2887.jpg', 'crash.2898.jpg', 'crash.2924.jpg', 'crash.2929.jpg', 'crash.2930.jpg', 'crash.2957.jpg', 'crash.2973.jpg', 'crash.2978.jpg', 'crash.2980.jpg', 'crash.2985.jpg', 'crash.3015.jpg', 'crash.3021.jpg', 'crash.3039.jpg', 'crash.3072.jpg', 'crash.3091.jpg', 'crash.3092.jpg', 'crash.3101.jpg', 'crash.3128.jpg', 'crash.3139.jpg', 'crash.3147.jpg', 'crash.3151.jpg', 'crash.3171.jpg', 'crash.3179.jpg', 'crash.3187.jpg', 'crash.3190.jpg', 'crash.3214.jpg', 'crash.3230.jpg', 'crash.3238.jpg', 'crash.3240.jpg', 'crash.3242.jpg', 'crash.3268.jpg', 'crash.3271.jpg', 'crash.3304.jpg', 'crash.3310.jpg', 'crash.3313.jpg', 'crash.3317.jpg', 'crash.3322.jpg', 'crash.3325.jpg', 'crash.3336.jpg', 'crash.3352.jpg', 'crash.3355.jpg', 'crash.3358.jpg', 'crash.3374.jpg', 'crash.3375.jpg', 'crash.3379.jpg', 'crash.3402.jpg', 'crash.3410.jpg', 'crash.3417.jpg', 'crash.3448.jpg', 'crash.3458.jpg', 'crash.3469.jpg', 'crash.3492.jpg', 'crash.3497.jpg', 'crash.3509.jpg', 'crash.3512.jpg', 'crash.3515.jpg', 'crash.3516.jpg', 'crash.3518.jpg', 'crash.3560.jpg', 'crash.3578.jpg', 'crash.3584.jpg', 'crash.3593.jpg', 'crash.3598.jpg', 'crash.3609.jpg', 'crash.3630.jpg', 'crash.3637.jpg', 'crash.3645.jpg', 'crash.3649.jpg', 'crash.3653.jpg', 'crash.3663.jpg', 'crash.3679.jpg', 'crash.3681.jpg', 'crash.3706.jpg', 'crash.3710.jpg', 'crash.3720.jpg', 'crash.3727.jpg', 'crash.3747.jpg', 'crash.3750.jpg', 'crash.3753.jpg', 'crash.3754.jpg', 'crash.3767.jpg', 'crash.3797.jpg', 'crash.3809.jpg', 'crash.3812.jpg', 'crash.3820.jpg', 'crash.3857.jpg', 'crash.3864.jpg', 'crash.3867.jpg', 'crash.3891.jpg', 'crash.3899.jpg', 'crash.3905.jpg', 'crash.3907.jpg', 'crash.3926.jpg', 'crash.3958.jpg', 'crash.3982.jpg', 'crash.3986.jpg', 'crash.3989.jpg', 'crash.3993.jpg', 'crash.4003.jpg', 'crash.4006.jpg', 'crash.4011.jpg', 'crash.4019.jpg', 'crash.4021.jpg', 'crash.4027.jpg', 'crash.4033.jpg', 'crash.4059.jpg', 'crash.4068.jpg', 'crash.4086.jpg', 'crash.4099.jpg', 'crash.4119.jpg', 'crash.4124.jpg', 'crash.4132.jpg', 'crash.4134.jpg', 'crash.4139.jpg', 'crash.4160.jpg', 'crash.4163.jpg', 'crash.4164.jpg', 'crash.4169.jpg', 'crash.4175.jpg', 'crash.4195.jpg', 'crash.4206.jpg', 'crash.4207.jpg', 'crash.4210.jpg', 'crash.4214.jpg', 'crash.4221.jpg', 'crash.4233.jpg', 'crash.4242.jpg', 'crash.4244.jpg', 'crash.4249.jpg', 'crash.4263.jpg', 'crash.4294.jpg', 'crash.4295.jpg', 'crash.4307.jpg', 'crash.4315.jpg', 'crash.4327.jpg', 'crash.4339.jpg', 'crash.4352.jpg', 'crash.4353.jpg', 'crash.4354.jpg', 'crash.4360.jpg', 'crash.4371.jpg', 'crash.4373.jpg', 'crash.4374.jpg', 'crash.4375.jpg', 'crash.4383.jpg', 'crash.4389.jpg', 'crash.4390.jpg', 'crash.4392.jpg', 'crash.4403.jpg', 'crash.4420.jpg', 'crash.4422.jpg', 'crash.4443.jpg', 'crash.4448.jpg', 'crash.4465.jpg', 'crash.4477.jpg', 'crash.4481.jpg', 'crash.4513.jpg', 'crash.4537.jpg', 'crash.4566.jpg', 'crash.4576.jpg', 'crash.4577.jpg', 'crash.4593.jpg', 'crash.4629.jpg', 'crash.4637.jpg', 'crash.4653.jpg', 'crash.4669.jpg', 'crash.4682.jpg', 'crash.4694.jpg', 'crash.4697.jpg', 'crash.4714.jpg', 'crash.4722.jpg', 'crash.4725.jpg', 'crash.4735.jpg', 'crash.4741.jpg', 'crash.4748.jpg', 'crash.4753.jpg', 'crash.4807.jpg', 'crash.4816.jpg', 'crash.4819.jpg', 'crash.4848.jpg', 'crash.4863.jpg', 'crash.4872.jpg', 'crash.4882.jpg', 'crash.4886.jpg', 'crash.4894.jpg', 'crash.4905.jpg', 'crash.4909.jpg', 'crash.4912.jpg', 'crash.4919.jpg', 'crash.4924.jpg', 'crash.4942.jpg', 'crash.4951.jpg', 'crash.4955.jpg', 'crash.4976.jpg', 'crash.4984.jpg', 'crash.4998.jpg', 'crash.5005.jpg', 'crash.5015.jpg', 'crash.5025.jpg', 'crash.5033.jpg', 'crash.5063.jpg', 'crash.5077.jpg', 'crash.5080.jpg', 'crash.5092.jpg', 'crash.5096.jpg', 'crash.5104.jpg', 'crash.5112.jpg', 'crash.5118.jpg', 'crash.5125.jpg', 'crash.5140.jpg', 'crash.5145.jpg', 'crash.5150.jpg', 'crash.5168.jpg', 'crash.5170.jpg', 'crash.5184.jpg', 'crash.5189.jpg', 'crash.5195.jpg', 'crash.5205.jpg', 'crash.5208.jpg', 'crash.5239.jpg', 'crash.5241.jpg', 'crash.5251.jpg', 'crash.5252.jpg', 'crash.5257.jpg', 'crash.5275.jpg', 'crash.5276.jpg', 'crash.5279.jpg', 'crash.5290.jpg', 'crash.5302.jpg', 'crash.5320.jpg', 'crash.5333.jpg', 'crash.5334.jpg', 'crash.5346.jpg', 'crash.5349.jpg', 'crash.5351.jpg', 'crash.5360.jpg', 'crash.5385.jpg', 'crash.5389.jpg', 'crash.5392.jpg', 'crash.5403.jpg', 'crash.5413.jpg', 'crash.5423.jpg', 'crash.5445.jpg', 'crash.5467.jpg', 'crash.5483.jpg', 'crash.5528.jpg', 'crash.5540.jpg', 'crash.5563.jpg', 'crash.5569.jpg', 'crash.5575.jpg', 'crash.5581.jpg', 'crash.5585.jpg', 'crash.5587.jpg', 'crash.5636.jpg', 'crash.5637.jpg', 'crash.5641.jpg', 'crash.5643.jpg', 'crash.5655.jpg', 'crash.5671.jpg', 'crash.5680.jpg', 'crash.5681.jpg', 'crash.5683.jpg', 'crash.5727.jpg', 'crash.5741.jpg', 'crash.5754.jpg', 'crash.5762.jpg', 'crash.5768.jpg', 'crash.5781.jpg', 'crash.5788.jpg', 'crash.5803.jpg', 'crash.5814.jpg', 'crash.5818.jpg', 'crash.5822.jpg', 'crash.5824.jpg', 'crash.5826.jpg', 'crash.5827.jpg', 'crash.5831.jpg', 'crash.5844.jpg', 'crash.5853.jpg', 'crash.5856.jpg', 'crash.5869.jpg', 'crash.5895.jpg', 'crash.5912.jpg', 'crash.5920.jpg', 'crash.5925.jpg', 'crash.5930.jpg', 'crash.5933.jpg', 'crash.5969.jpg', 'crash.5979.jpg', 'crash.5985.jpg', 'crash.6003.jpg', 'crash.6021.jpg', 'crash.6076.jpg', 'crash.6080.jpg', 'crash.6083.jpg', 'crash.6092.jpg', 'crash.6094.jpg', 'crash.6095.jpg', 'crash.6104.jpg', 'crash.6105.jpg', 'crash.6109.jpg', 'crash.6130.jpg', 'crash.6138.jpg', 'crash.6145.jpg', 'crash.6159.jpg', 'crash.6164.jpg', 'crash.6177.jpg', 'crash.6180.jpg', 'crash.6190.jpg', 'crash.6191.jpg', 'crash.6194.jpg', 'crash.6213.jpg', 'crash.6237.jpg', 'crash.6238.jpg', 'crash.6240.jpg', 'crash.6241.jpg', 'crash.6242.jpg', 'crash.6245.jpg', 'crash.6253.jpg', 'crash.6260.jpg', 'crash.6266.jpg', 'crash.6270.jpg', 'crash.6273.jpg', 'crash.6278.jpg', 'crash.6280.jpg', 'crash.6289.jpg', 'crash.6297.jpg', 'crash.6308.jpg', 'crash.6315.jpg', 'crash.6318.jpg', 'crash.6321.jpg', 'crash.6334.jpg', 'crash.6335.jpg', 'crash.6344.jpg', 'crash.6368.jpg', 'crash.6377.jpg', 'crash.6410.jpg', 'crash.6413.jpg', 'crash.6435.jpg', 'crash.6446.jpg', 'crash.6448.jpg', 'crash.6451.jpg', 'crash.6464.jpg', 'crash.6471.jpg', 'crash.6484.jpg', 'crash.6494.jpg', 'crash.6499.jpg', 'crash.6522.jpg', 'crash.6526.jpg', 'crash.6528.jpg', 'crash.6541.jpg', 'crash.6557.jpg', 'crash.6563.jpg', 'crash.6579.jpg', 'crash.6583.jpg', 'crash.6584.jpg', 'crash.6586.jpg', 'crash.6601.jpg', 'crash.6603.jpg', 'crash.6605.jpg', 'crash.6614.jpg', 'crash.6623.jpg', 'crash.6624.jpg', 'crash.6626.jpg', 'crash.6628.jpg', 'crash.6647.jpg', 'crash.6658.jpg', 'crash.6670.jpg', 'crash.6676.jpg', 'crash.6680.jpg', 'crash.6681.jpg', 'crash.6694.jpg', 'crash.6705.jpg', 'crash.6714.jpg', 'crash.6732.jpg', 'crash.6738.jpg', 'crash.6749.jpg', 'crash.6763.jpg', 'crash.6774.jpg', 'crash.6779.jpg', 'crash.6797.jpg', 'crash.6825.jpg', 'crash.6853.jpg', 'crash.6860.jpg', 'crash.6889.jpg', 'crash.6917.jpg', 'crash.6949.jpg', 'crash.6961.jpg', 'crash.6975.jpg', 'crash.6983.jpg', 'crash.6987.jpg', 'crash.6996.jpg', 'crash.7021.jpg', 'crash.7023.jpg', 'crash.7039.jpg', 'crash.7048.jpg', 'crash.7054.jpg', 'crash.7056.jpg', 'crash.7074.jpg', 'crash.7080.jpg', 'crash.7093.jpg', 'crash.7105.jpg', 'crash.7117.jpg', 'crash.7125.jpg', 'crash.7133.jpg', 'crash.7141.jpg', 'crash.7152.jpg', 'crash.7176.jpg', 'crash.7178.jpg', 'crash.7180.jpg', 'crash.7187.jpg', 'crash.7210.jpg']
-
-
-
----------------------------------------------------------------------------
-
-AttributeError                            Traceback (most recent call last)
-
-Cell In[8], line 62
-     60             f.close()
-     61 files = get_files()
----> 62 triage_files(files)
-
-
-Cell In[8], line 26, in triage_files(files)
-     24     else:
-     25         counter += 1
----> 26 target_line = target_line.split(" ")
-     27 address = target_line[5].replace("0x","")
-     30 target_line2 = target_line2.split(" ")
-
-
-AttributeError: 'list' object has no attribute 'split'
-#+end_example
-
 * Trying AFL
-:PROPERTIES:
-:CUSTOM_ID: trying-afl
-:END:
-- Download [[https://github.com/fuzzstati0n/fuzzgoat][fuzzgoat]] and
-  harness it!
+- Download [[https://github.com/fuzzstati0n/fuzzgoat][fuzzgoat]] and harness it!
 
 * Non-binary targets? we've got you covered!
-:PROPERTIES:
-:CUSTOM_ID: non-binary-targets-weve-got-you-covered
-:END:
 ** REST APIs
-:PROPERTIES:
-:CUSTOM_ID: rest-apis
-:END:
-- Try
-  [[https://www.microsoft.com/en-us/research/publication/restler-stateful-rest-api-fuzzing/][Restler]]
+- Try [[https://www.microsoft.com/en-us/research/publication/restler-stateful-rest-api-fuzzing/][Restler]]
 - or [[https://github.com/KissPeter/APIFuzzer][APIFuzzer]]
 
 *** Disclaimer: check before you fuzz a live environment!
-:PROPERTIES:
-:CUSTOM_ID: disclaimer-check-before-you-fuzz-a-live-environment
-:END:
-- API fuzzing on live environments is bad practice and can get you in
-  trouble
+- API fuzzing on live environments is bad practice and can get you in trouble
 - Often VDPs explicitely disallow it
