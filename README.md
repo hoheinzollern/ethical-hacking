@@ -7,9 +7,9 @@
 4. [Deserialization Attacks (Java/Python/.NET attacks)](4-deserialization-attacks.org) (20/2)
 5. [Fuzzying: Binaries (AFL), make your own fuzzer, Web](5-fuzzying.org) (27/2)
 6. [Symbolic execution: Angr, build your own engine](6-symbolic-execution.org) (5/3)
-7. [Bad use of cryptography](3-bad-crypto.pptx) / [Breaking RSA](3-breaking-rsa.org) (12/3)
+7. [Guest lecture: code scanning with CodeQL](talks/ITU-22-03-2023%20Guest%20Lecture%20on%20CodeQL.pdf) [[Live coding files](https://github.com/yoff/codeql/tree/lecture/itu-22-03-2023/misc/lecture-live-coding)] (12/3)
 8. [HW hacking](7-hw-hacking.org) (19/3) <- deadline 1
-9. [Guest lecture: code scanning with CodeQL](talks/ITU-22-03-2023%20Guest%20Lecture%20on%20CodeQL.pdf) [[Live coding files](https://github.com/yoff/codeql/tree/lecture/itu-22-03-2023/misc/lecture-live-coding)] (26/3)
+9. [Bad use of cryptography](3-bad-crypto.pptx) / [Breaking RSA](3-breaking-rsa.org) (26/3)
 10. [Forensics & antiforensics](9-computer-forensics.pdf) (2/4) <- deadline 2
 11. [Identifying & breaking security assumptions](10-birdeye.org) (9/4)
 
