@@ -97,10 +97,25 @@ Fuzzying is (almost) like that
 * [[https://github.com/AFLplusplus/AFLplusplus][AFL++]]
 - The gold standard
   - Looks to be being replaced slowly by libfuzzer in popularity
-- Coverage guided
+- Coverage guided fuzzing
+- Requires source code
 - Relies on having source in standard configuration
 - Can use QEMU for coverage
 
+
+#+begin_src+python
+if x < 10:
+   doSomething() # covered
+   took path 1
+else:
+   doSomethingElse() # covered
+   took path 2
+for x in range(10):
+   dosomething()
+#+end_src
+
+test 1: x = 10
+test 2: x = 0
 * [[https://llvm.org/docs/LibFuzzer.html][libfuzzer]]
 - Designed to be baked into your target application
 - Part of LLVM, easily used when building a target with clang

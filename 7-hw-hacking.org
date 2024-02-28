@@ -1,64 +1,37 @@
 * Hardware Hacking
-:PROPERTIES:
-:CUSTOM_ID: hardware-hacking
-:END:
+
 ** Ethical hacking course - S2023
-:PROPERTIES:
-:CUSTOM_ID: ethical-hacking-course---s2023
-:END:
+
 ** Alessandro Bruni
-:PROPERTIES:
-:CUSTOM_ID: alessandro-bruni
-:END:
+
 ** Literature:
-:PROPERTIES:
-:CUSTOM_ID: literature
-:END:
-- [[https://hackaday.com/2008/11/19/how-to-the-bus-pirate-universal-serial-interface/][How-to:
-  The Bus Pirate, Universal Serial Interface]]
-- [[http://dangerousprototypes.com/docs/Bus_Pirate_101_tutorial][Bus
-  Pirate 101 tutorial]]
-- [[http://dangerousprototypes.com/docs/Bus_Pirate_102_tutorial][Bus
-  Pirate 102 tutorial]]
-- [[https://embeddedbits.org/reverse-engineering-router-firmware-with-binwalk/][Reverse
-  engineering my router's firmware with binwalk]]
+
+- [[https://hackaday.com/2008/11/19/how-to-the-bus-pirate-universal-serial-interface/][How-to: The Bus Pirate, Universal Serial Interface]]
+- [[http://dangerousprototypes.com/docs/Bus_Pirate_101_tutorial][Bus Pirate 101 tutorial]]
+- [[http://dangerousprototypes.com/docs/Bus_Pirate_102_tutorial][Bus Pirate 102 tutorial]]
+- [[https://embeddedbits.org/reverse-engineering-router-firmware-with-binwalk/][Reverse engineering my router's firmware with binwalk]]
 
 * Intro to hardware hacking
-:PROPERTIES:
-:CUSTOM_ID: intro-to-hardware-hacking
-:END:
+
 ** Step 1: break it apart!
-:PROPERTIES:
-:CUSTOM_ID: step-1-break-it-apart
-:END:
+
 [[file:img/router.png]]
 
 ** Step 2: find interesting information on the board
-:PROPERTIES:
-:CUSTOM_ID: step-2-find-interesting-information-on-the-board
-:END:
+
 [[file:img/router.png]]
 
 ** Step 3: recognize useful interfaces (JTAG/UART/I2C/SPI etc.)
-:PROPERTIES:
-:CUSTOM_ID: step-3-recognize-useful-interfaces-jtaguarti2cspi-etc.
-:END:
+
 [[file:img/router.png]]
 
 ** Step 4: connect and inspect
-:PROPERTIES:
-:CUSTOM_ID: step-4-connect-and-inspect
-:END:
+
 [[file:img/buspirate.jpg]]
 
 Follow the
-[[http://dangerousprototypes.com/docs/Bus_Pirate_101_tutorial][Bus
-Pirate 101 tutorial]]
+[[http://dangerousprototypes.com/docs/Bus_Pirate_101_tutorial][Bus Pirate 101 tutorial]]
 
 ** Step 5: dump firmware and binwalk!
-:PROPERTIES:
-:CUSTOM_ID: step-5-dump-firmware-and-binwalk
-:END:
-Follow
-[[https://embeddedbits.org/reverse-engineering-router-firmware-with-binwalk/][Reverse
-engineering my router's firmware with binwalk]]
+
+Follow [[https://embeddedbits.org/reverse-engineering-router-firmware-with-binwalk/][Reverse engineering my router's firmware with binwalk]]
