@@ -544,12 +544,12 @@ So:
 - When you're ready, got to the introduction program and try out Fauxware. 
 - Fauxware is a very basic program solved with angr. 
 - Study the solution file and the source. Does it make sense? What happens if you run solve.py and piping 
-- it to .\fauxware ?
+- it to ./fauxware ?
 
 *** "CSAW CTF 2015 Quals - Reversing 500, “wyvern". 
 - It's a challenge from a CTF competition, it requires just little user input. 
 - As before, study the solution file and the source. Does it make sense? What happens if you run solve.py and piping 
-it to .\wyvern ?
+it to ./wyvern ?
 
 ** Vulnerability Discovery: 
 
