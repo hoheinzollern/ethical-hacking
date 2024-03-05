@@ -6,6 +6,7 @@
 
 * Uniform program representation
 * Problem
+
 - we have programs in many different formats
 - often in offensive security no access to sources
 - if we want to analyze code we need an uniform way to represent it, so
@@ -199,16 +200,19 @@ IRSB {
 #+end_example
 
 * Analyses
-Once we have a way to represent arbitrary binary files we can: - run
-static analysis - instrument the code - fuzz the binary - run dynamic
-analysis
+
+Once we have a way to represent arbitrary binary files we can:
+- run static analysis
+- instrument the code
+- fuzz the binary
+- run dynamic analysis
 
 * Static analysis
+
 Most useful at compile time, but can be run also on binaries. The basic
 idea: describe mathematically a piece of code and learn interesting
 properties instead of running it.
 
-If interested for an introduction, check this book:
 [[https://www.springer.com/gp/book/9783030051556][file:img/6-symbolic-execution_files/image.png]]
 
 * Example: null-pointer analysis
@@ -233,8 +237,10 @@ All non-trivial, semantic properties of programs are undecidable
 - And we have tools that can help us
 
 * Dynamic analyses
-If we cannot decide things statically, then we can: - instrument and run
-the code - fuzz the binary - run symbolic execution
+If we cannot decide things statically, then we can:
+- instrument and run the code
+- fuzz the binary
+- run symbolic execution
 
 * Binary instrumentation
 - take the IR of a program and change it as to reveal software flaws
@@ -299,8 +305,8 @@ int main(void) {
 - SMT stands for Satisfiability Modulo Theory
 - essentially solving the SAT problem (known NP-complete but efficient
   solutions are available) where each atom relies on a theory
-- SAT:
-  e.g. \((a \vee b \vee c) \wedge (\lnot a \vee b) \wedge (\lnot b)\)
+- SAT: (A \/ B \/ C) /\ (!A \/ B) /\ (!B)
+  e.g. \((a \vee b \vee c) \wedge (\lnot a \vee b) \wedge (\lnot b)\
 - theories: empty theory, linear arithmetic, nonlinear arithmetic,
   bitvectors, arrays, datatypes, quantifiers, strings (from Z3)
 
@@ -467,6 +473,7 @@ int main(void) {
 #+end_src
 
 #+begin_src python
+project = angr.Project('ex01')
 argv = claripy.BVS('argv', 10*0x8)
 state = project.factory.entry_state(args = ['ex01', argv])
 simgr = project.factory.simgr(state)
