@@ -530,7 +530,7 @@ fibandfact(100) == (fib(100), fact(100))
 Getting good at using angr requires knowledge of reverse engineering, binary exploitation, etc. 
 Utilizing it is a disciplin. 
 Therefore, we invite you to study and run some of the easier binaries, 
-which also a run through of the thought process in their solve.py.
+which also have a run-through of the thought process in the solve.py.
 
 So:
 - Install/Setup angr.
@@ -556,4 +556,4 @@ it to .\wyvern ?
 - Try out strcpy. How fast did your machine solve it? Did you find anything different from the reversing challenges? 
 
 
-Getting a proper grasp of angr, takes time, so feel free to check some of the other examples out in the future :-)
+Getting a proper grasp of angr, takes time, so feel free to check some of the other examples out in the future and if you are ready to solve some of the challenges, go straight ahead :-)
