@@ -531,6 +531,7 @@ Getting good at using angr requires knowledge of reverse engineering, binary exp
 Utilizing it is a disciplin. 
 Therefore, we invite you to study and run some of the easier binaries, 
 which also have a run-through of the thought process in the solve.py.
+[[https://docs.angr.io/en/latest/examples.html]]
 
 So:
 - Install/Setup angr.
