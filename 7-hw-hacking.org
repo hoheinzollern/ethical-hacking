@@ -1,6 +1,6 @@
 * Hardware Hacking
 
-** Ethical hacking course - S2023
+** Ethical hacking course - S2024
 
 ** Alessandro Bruni
 
