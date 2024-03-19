@@ -2,6 +2,10 @@
 
 ** Ethical hacking course - S2024
 
+** Lecture slides by Felix Anton Anderson (aka Cave)
+[[https://github.itu.dk/brun/ethical-hacking-2024/tree/main/code/9-hardware_hacking][Slides]]
+
+
 ** Alessandro Bruni
 
 ** Literature:
