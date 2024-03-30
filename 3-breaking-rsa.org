@@ -598,3 +598,20 @@ sender is ignorant of which secret has been received"
 :END:
 #+caption: image.png
 [[file:img/3-breaking-rsa_files/image.png]]
+
+* Exercises - CTF with Haaukins
+
+- What is Hauukins? Haaukins provides the participants the possibility to work on various cyber security challenges in a closed and secure virtual environment. Challenges includes network forensics, web exploitation, reverse engineering, binaries and cryptography. 
+
+- Go to [[https://itusec.ntp-event.dk/]] and create a user.
+
+- Connect to the virtual machine hosted on your lab. See point 'info' for copy/paste instructions.
+
+- For tips and tricks, try [[https://aau-network-security.github.io/tips-and-tricks/]].
+- Other useful cipher/encoding tools: [[https://www.dcode.fr/tools-list]] & [[https://dencode.com/]]
+
+- Try out the starter challenge 'Welcome Cookie'. 
+
+- After this, try and solve the other challenges for Cryptography, like 'Beginner RSA' and onwards. 
+
+- Happy Hacking!
