@@ -613,5 +613,6 @@ sender is ignorant of which secret has been received"
 - Try out the starter challenge 'Welcome Cookie'. 
 
 - After this, try and solve the other challenges for Cryptography, like 'Beginner RSA' and onwards. 
+- If the .txt's are blank, find the backup files under ethical-hacking-2024\code\9-rsa-haaukins_cryptography to solve the exercises.
 
 - Happy Hacking!
