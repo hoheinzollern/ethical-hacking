@@ -1,0 +1,4 @@
+We have found the perfect encryption scheme, it supplies PERFECT SECRECY! It just requires us to generate a new key for each message that has the exact same length as the message, easy!
+
+key: b'LOREMIPSUMDOLORSI'
+encrypted message: b'\x04\x04\x1c>:!}<\x1byi\n+(#&4'
