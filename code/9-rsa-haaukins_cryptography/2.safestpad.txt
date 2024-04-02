@@ -2,3 +2,5 @@ We have found the perfect encryption scheme, it supplies PERFECT SECRECY! It jus
 
 key: b'LOREMIPSUMDOLORSI'
 encrypted message: b'\x04\x04\x1c>:!}<\x1byi\n+(#&4'
+
+*Verify your result. Is correct if your flag ends with "ggqu}"*
