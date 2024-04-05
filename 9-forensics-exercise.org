@@ -1,7 +1,7 @@
 * Digital forensics - Exercises
 ** Return of Haaukins CTF
-- Go to [[itusec.haaukins.dk][ITUSec - Haaukins]]
-- Create an account - this haaukins page is different than last time, but follows same structure
+- Go to [[https://itusec.haaukins.dk][ITUSec - Haaukins]]
+- Create an account - this Haaukins page is different than last time, but follows the same structure.
 - Solve the challenges under 'Forensics'. Doing forensics is like being a detective, following clues, leads adn what not. 
 - How many points can you accumulate? 
 - Happy hacking! 
