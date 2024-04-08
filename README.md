@@ -13,6 +13,7 @@
 10. [Forensics & antiforensics](9-forensics.pdf) / [Forensics Exercise](9-forensics-exercise.org) (9/4)
 11. [Identifying & breaking security assumptions](10-birdeye.org) (16/4) <- deadline 2
 12. [Guest lecture: Nicolai Strøm Steffensen / CSIS]() (23/4)
+13. Tentative: small CTF game
 
 ## Project:
 1. Find a project/organization, identify/agree on responsible disclosure policy.
