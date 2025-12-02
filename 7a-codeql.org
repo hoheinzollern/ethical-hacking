@@ -9,3 +9,7 @@
   [[https://github.blog/2023-03-09-multi-repository-variant-analysis-a-powerful-new-way-to-perform-security-research-across-github/][MRVA]]
   # CVE-2022-41892 # query kind path-problem
   https://securitylab.github.com/ctf/
+
+https://ifc-challenge.appspot.com
+
+https://beneri.se/ivc/
