@@ -1,0 +1,132 @@
+\documentclass{scrbook}
+\author{Alessandro Bruni}
+\title{The Hitchiker's Guide to Ethical Hacking}
+
+
+\begin{document}
+\begin{center}
+  {\Huge The Hitchiker's Guide to Ethical Hacking}\\[5em]
+
+  {\huge Don't Panic!}
+\end{center}
+\newpage
+\maketitle
+
+\chapter*{Preface}
+
+\section*{Take your towel, brace yourself!}
+
+Well well, you decided to take the ``Ethical Hacking'' course at the
+IT-University of Copenhagen.  Perhaps, you've done so because it is
+slightly cheaper than taking a professional ethical hacker
+certification.  Or perhaps, just because you were already doing your
+masters at ITU and were curious to find out what the fuss was all
+about.  You noticed the reassuring message ``Don't Panic'' written in
+big letters on the cover of the course handbook and decided that they
+must be a trustworthy source of information.  Congratulations!
+
+No, the Earth is not going to be destroyed by an alien species to make
+space for an intergalactical highway, not just yet.  Nor are you going
+to lose a roof over your head.  But you might, inadvertently or not,
+commit a crime that could put you in jail.  Please don't!  We don't
+want you in jail.  Jail = bad.  So here is our promise to you: we will
+try very hard to help you commit your crime (hack) and get away with
+it (with immunity).  Ultimately though, the responsibility is on you,
+so if you smell something fishy, or feel like you are walking on
+eggshells: stop what you're doing. breathe. talk to us. we will figure
+it out.  You are reading this handbook to prepare yourself and prevent
+such situations from happening, but you never know\footnote{Nobody
+  went to jail in previous editions of this course, and I'd like to
+  continue this happy tradition. Thank you!}\ldots
+
+\section*{Follow the white rabbit}
+
+I promise, I will stop with humorous remarks and literature
+references, but I am not done just yet.
+
+Hacking is an art.  The amount of knowledge to learn in any specific
+topic that we cover in this course is immense.  This handbook is by
+definition incomplete.  We will cover a range of topics that will
+elevate your hacking skills, from n00b scr1pt k1dd13 2 l33t h4ck3r.
+But like painting or any other art form, you do not learn to paint by
+reading about how to paint, let alone by reading an incomplete
+handbook.  You learn by trying, failing and trying again.  Hopefully
+succeeding, eventually.  You will go down a few rabbit holes, and I
+hope you will enjoy the learning process, even more than the result.
+Embrace frustration.  Do not give up.
+
+Through all this trial and error, you will need to remind yourself of
+the bird's eye view.  When you are down in the trenches, trying to
+discover a bad flow of information, never forget \emph{why} you are
+doing this.  And when (if) you find your smoking gun, always remind
+yourself to go back and evaluate the consequences of what you just
+found out.  Do not stop at the smoking gun.  Follow the smoke.
+
+\section*{Structure of this course}
+
+This course (and this handbook) is designed to let you:
+\begin{enumerate}
+\item stay out of jail (first and most importantly!)
+\item explore some advanced hacking technique (of your choice)
+\item report your findings and get those vulnerabilities fixed
+  (hopefully also earn some money in the process, if you choose your
+  target wisely)
+\end{enumerate}
+
+We will start by introducing the relevant Danish legislation for
+hacking, present the coordinated vulnerability disclosure process and
+bug bounty programmes in Lecture 1; we will then show you
+methodological frameworks for analyzing the security of your target in
+Lecture 2.  After this, the fluff is over, and we will switch gears to
+dive deep into technical material.  Lecture 3 will give you a refresh
+on assembly code and binary reverse engineering.  Lecture 4 will show
+you how to automate vulnerability search through symbolic execution.
+Lecture 5 will look at deserialization attacks.  Lecture 6 will cover
+how to do automated vulnerability scanning with lightweight static
+analysis.  Lecture 7 will present fuzzers to randomly search for
+vulnerabilities.  Lecture 8 will cover hardware hacking.  Lecture 9
+will show you common pitfalls in cryptography.  Lecture 10 will
+present forensics and antiforensics.  Lecture 11 will show you
+phishing / social engineering techniques.
+
+While we show you all this, you will have to find your target and set
+up a coordinated vulnerability disclosure agreement (VDP) with the
+appropriate parties.  As you progress through the course, think of
+your target and what you are going to do to hack them.  Think well,
+what techniques you want to try in your project and dive deep into
+them.  Then it will be your turn to shine!  The last 4 weeks of the
+course are dedicated to helping you succeed with your project.  Then
+finally, will have to report on your experiments, the VDP that you
+agreed with the relevant parties, and your findings overall.  In order
+to pass the exam, you do not need to discover the hack of the century,
+but you will need to convince us that you explored your target with
+good enough depth, have understood the security implications of your
+hacks, and show that you have remained as legal as possible.
+
+From now on, you get my blessing: \emph{go hack yourself}!
+
+\tableofcontents
+
+\chapter{Legality of hacking and responsible disclosure}
+
+\chapter{Securing your system from a bird's eye view}
+
+\chapter{Binary reverse engineering}
+
+\chapter{Symbolic execution}
+
+\chapter{Static analysis with CodeQL}
+
+\chapter{Deserialization attacks}
+
+\chapter{Fuzzers and randomized vulnerability search}
+
+\chapter{Hardware hacking}
+
+\chapter{Common pitfalls in cryptography}
+
+\chapter{Forensics and antiforensics}
+
+\chapter{Phishing and social engineering}
+
+\end{document}
